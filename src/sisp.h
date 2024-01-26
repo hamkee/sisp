@@ -1,26 +1,42 @@
 #ifndef SISP_H
-#define IDENTIFIER  7
-#define INTEGER     8
-#define RATIONAL    9
-#define OBJ_SIZE		sizeof(struct object)
+#define IDENTIFIER 7
+#define INTEGER 8
+#define RATIONAL 9
+#define OBJ_SIZE sizeof(struct object)
 
-typedef enum	{false, true} bool;
-typedef enum 	{OBJ_NULL, OBJ_NIL, OBJ_T, OBJ_IDENTIFIER,
-				      OBJ_CONS, OBJ_INTEGER, OBJ_RATIONAL} a_type;
+typedef enum
+{
+  false,
+  true
+} bool;
+typedef enum
+{
+  OBJ_NULL,
+  OBJ_NIL,
+  OBJ_T,
+  OBJ_IDENTIFIER,
+  OBJ_CONS,
+  OBJ_INTEGER,
+  OBJ_RATIONAL
+} a_type;
 
-typedef struct 	object *objectp;
+typedef struct object *objectp;
 
-struct object {
+struct object
+{
   a_type type;
-  unsigned int gc; /* unsigned? */
-  union {
+  unsigned int gc;
+  union
+  {
     char *id;
     long int i;
-    struct {
+    struct
+    {
       long int n;
       long int d;
     } r;
-    struct {
+    struct
+    {
       objectp car;
       objectp cdr;
     } c;
@@ -30,19 +46,21 @@ struct object {
 
 typedef struct object_pair *object_pairp;
 
-struct object_pair {
-	objectp name;
-	objectp value;
-	object_pairp next;
+struct object_pair
+{
+  objectp name;
+  objectp value;
+  object_pairp next;
 };
 
-typedef struct {
-	char *name;
-	objectp (*func)(objectp args);
+typedef struct
+{
+  char *name;
+  objectp (*func)(objectp args);
 } funcs;
 
-#define vcar	value.c.car
-#define vcdr	value.c.cdr
+#define vcar value.c.car
+#define vcdr value.c.cdr
 
 #define SISP_H
 

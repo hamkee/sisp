@@ -17,10 +17,10 @@ const char *builtin_functions[] = {
 	"        (t (cons (car l) (butlast (cdr l))))))\n",
 	"(define (get-names x)\n",
 	"    (cond ((eq x nil) nil)",
-	"           (t (cons (caar x) (get-names (cdr x))))))\n",	
+	"           (t (cons (caar x) (get-names (cdr x))))))\n",
 	"(define (get-values x)\n",
 	"    (cond ((eq x nil) nil)",
-	"           (t (cons (cdar x) (get-values (cdr x))))))\n",	
+	"           (t (cons (cdar x) (get-values (cdr x))))))\n",
 	"(define (unpair x)\n",
 	"    (list (get-names x) (get-values x)))\n",
 	"(define (rplaca x y)\n",
@@ -38,7 +38,6 @@ const char *builtin_functions[] = {
 	"(define (pred x y)\n",
 	"  (cond ((or (not y) (not (cdr y))) nil)\n",
 	"	((eq (cadr y) x) (car y))\n",
-	"	(t (pred x (cdr y)))))\n"
-};
+	"	(t (pred x (cdr y)))))\n"};
 #define LIBSISP_H
 #endif

@@ -161,7 +161,7 @@ void set_object(objectp name, objectp value)
 	p->value = value;
 }
 
-__inline__ objectp
+objectp
 try_object(objectp name)
 {
 	object_pairp p;
@@ -175,7 +175,7 @@ try_object(objectp name)
 	return null;
 }
 
-__inline__ objectp
+objectp
 get_object(objectp name)
 {
 	object_pairp p;
@@ -216,21 +216,20 @@ void dump_objects(void)
 	}
 	for (i = 3; i < 7; i++)
 		printf("|%6zd %6zd|\n", pool[i].used_size, pool[i].free_size);
-	printf("want to see a pool? a magic pool??\nTell me a number, a magic number!: ");
+	printf("dump pool: ");
 	scanf("%d", &i);
 	if (i >= 3 && i < 7)
 	{
 		for (q = pool[i].head.u; q != NULL; q = q->next)
 		{
 			princ_object(stdout, q);
-			printf(" --- ");
+			printf(" ");
 		}
 		printf("\n");
 	}
 }
 
-__inline__ static void
-tag_tree(objectp p)
+static void tag_tree(objectp p)
 {
 	if (p->gc == gc_id)
 		return;
@@ -242,8 +241,7 @@ tag_tree(objectp p)
 	}
 }
 
-__inline__ static void
-tag_whole_tree(void)
+static void tag_whole_tree(void)
 {
 	object_pairp p;
 
@@ -254,8 +252,7 @@ tag_whole_tree(void)
 	}
 }
 
-__inline__ void
-garbage_collect(void)
+void garbage_collect(void)
 {
 	objectp p, prev, next;
 	objectp new_used_objs_list = t;

@@ -1,6 +1,7 @@
 #ifndef _VMM_H
 #define _VMM_H
 
+#define NUM_POOLS 8
 extern objectp oballoc(a_type);
 extern void obfree(objectp);
 extern void recycle_pool(a_type);
@@ -14,6 +15,6 @@ struct t_pool
 		objectp u;
 		objectp f;
 	} head;
-} pool[8];
+} pool[NUM_POOLS];
 
 #endif
