@@ -201,31 +201,37 @@ void clean_objects(void)
 	setobjs_list = NULL;
 }
 
-void dump_objects(void)
+void dump_object(int pool_number)
 {
 	objectp q;
 	object_pairp p;
 	int i;
 
-	for (p = setobjs_list; p != NULL; p = p->next)
+	if (pool_number == 0)
 	{
-		princ_object(stdout, p->name);
-		printf(":");
-		princ_object(stdout, p->value);
-		printf("\n");
+		for (p = setobjs_list; p != NULL; p = p->next)
+		{
+			princ_object(stdout, p->name);
+			printf(":");
+			princ_object(stdout, p->value);
+			printf("\n");
+		}
+		for (i = 3; i < 7; i++)
+			printf("|%6zd %6zd|\n", pool[i].used_size, pool[i].free_size);
 	}
-	for (i = 3; i < 7; i++)
-		printf("|%6zd %6zd|\n", pool[i].used_size, pool[i].free_size);
-	printf("dump pool: ");
-	scanf("%d", &i);
-	if (i >= 3 && i < 7)
+	else if (pool_number >= 3 && pool_number < 7)
 	{
-		for (q = pool[i].head.u; q != NULL; q = q->next)
+		for (q = pool[pool_number].head.u; q != NULL; q = q->next)
 		{
 			princ_object(stdout, q);
 			printf(" ");
 		}
 		printf("\n");
+		printf("|%6zd %6zd|\n", pool[pool_number].used_size, pool[pool_number].free_size);
+	}
+	else
+	{
+		fprintf(stderr, "; NO SUCH POOL");
 	}
 }
 

@@ -25,7 +25,7 @@ extern void remove_object(objectp);
 extern objectp try_object(objectp);
 extern objectp handsig(const char *);
 extern void garbage_collect(void);
-extern void dump_objects(void);
+extern void dump_object(int);
 /* parser.c */
 extern objectp parse_object(int);
 /* lexer.c */

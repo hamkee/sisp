@@ -61,7 +61,7 @@
 (stress 4)
 (stress 5)
 
-;(stress 100)
+(stress 100)
 ;(stress 200)
 ;(stress 500)
 ;(stress 1000)

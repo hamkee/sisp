@@ -69,6 +69,14 @@ eval_func(objectp p, objectp args)
 	q = head_args = b = NULL;
 
 	bind_list = cadr(p);
+	if (bind_list == nil)
+	{
+		if (!setjmp(je))
+		{
+			q = eval(car(cdr(cdr(p))));
+			return q;
+		}
+	}
 	do
 	{
 		M = new_object(OBJ_CONS);
@@ -92,6 +100,7 @@ eval_func(objectp p, objectp args)
 	} while ((bind_list = cdr(bind_list)) != nil);
 	q = null;
 	b = cddr(p);
+
 	if (!setjmp(je))
 	{
 		do

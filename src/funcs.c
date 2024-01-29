@@ -19,8 +19,6 @@
 	cdr(p)->type != OBJ_CONS && \
 	cdr(p) != nil)
 
-#define arg car(args)
-
 #define __ASSERTP(COND, ARG, F)                     \
 	do                                              \
 	{                                               \
@@ -42,39 +40,25 @@
 static objectp
 F_less(objectp args)
 {
-	args->vcar = eval(car(args));
-	args->vcdr = eval(cadr(args));
-	if (args->vcar->type == OBJ_INTEGER)
-	{
-		if (args->vcdr->type == OBJ_INTEGER)
-			return (args->vcar->value.i < args->vcdr->value.i) ? t : nil;
-		if (args->vcdr->type == OBJ_RATIONAL)
-			return (args->vcar->value.i * args->vcdr->value.r.d < args->vcdr->value.r.n) ? t : nil;
-	}
-	else if (args->vcar->type == OBJ_RATIONAL)
-	{
-		if (args->vcdr->type == OBJ_INTEGER)
-			return (args->vcar->value.r.n < args->vcar->value.r.d * args->vcdr->value.i) ? t : nil;
-		if (args->vcdr->type == OBJ_RATIONAL)
-			return (args->vcar->value.r.n * args->vcdr->value.r.d < args->vcdr->value.r.n * args->vcar->value.r.d) ? t : nil;
-	}
-	/*
+	objectp arg1, arg2;
 	arg1 = eval(car(args));
 	arg2 = eval(cadr(args));
 	__ASSERTP(arg1->type + arg2->type < 10, NON NUMERIC ARGUMENT, <);
 
-	if(arg1->type == OBJ_INTEGER) {
-		if(arg2->type == OBJ_INTEGER)
+	if (arg1->type == OBJ_INTEGER)
+	{
+		if (arg2->type == OBJ_INTEGER)
 			return (arg1->value.i < arg2->value.i) ? t : nil;
-		if(arg2->type == OBJ_RATIONAL)
-			return (arg1->value.i*arg2->value.r.d < arg2->value.r.n) ? t : nil;
-	} else if(arg1->type == OBJ_RATIONAL) {
-		if(arg2->type == OBJ_INTEGER)
-			return (arg1->value.r.n < arg1->value.r.d*arg2->value.i) ? t : nil;
-		if(arg2->type == OBJ_RATIONAL)
-			return (arg1->value.r.n*arg2->value.r.d < arg2->value.r.n * arg1->value.r.d) ? t : nil;
+		if (arg2->type == OBJ_RATIONAL)
+			return (arg1->value.i * arg2->value.r.d < arg2->value.r.n) ? t : nil;
 	}
-	*/
+	else if (arg1->type == OBJ_RATIONAL)
+	{
+		if (arg2->type == OBJ_INTEGER)
+			return (arg1->value.r.n < arg1->value.r.d * arg2->value.i) ? t : nil;
+		if (arg2->type == OBJ_RATIONAL)
+			return (arg1->value.r.n * arg2->value.r.d < arg2->value.r.n * arg1->value.r.d) ? t : nil;
+	}
 	return null;
 }
 
@@ -290,7 +274,7 @@ __inline__ static objectp F_car(objectp args)
 
 __inline__ static objectp F_cdr(objectp args)
 {
-	return cdr(eval(arg));
+	return cdr(eval(car(args)));
 }
 
 objectp
@@ -314,9 +298,9 @@ F_atom(objectp args)
 objectp
 F_consp(objectp args)
 {
-	// objectp p;
-	args->vcar = eval(car(args));
-	if (args->vcar->type == OBJ_CONS && cdr(args->vcar)->type != OBJ_CONS && cdr(args->vcar) != nil)
+	objectp p;
+	p = eval(car(args));
+	if (p->vcar->type == OBJ_CONS && cdr(p->vcar)->type != OBJ_CONS && cdr(p->vcar) != nil)
 		return t;
 	return nil;
 }
@@ -342,6 +326,7 @@ F_loadfile(objectp args)
 	free(p);
 	return nil;
 }
+
 objectp
 F_typeof(objectp args)
 {
@@ -497,7 +482,6 @@ F_quit(objectp args)
 	clean_pools();
 	clean_objects();
 	clean_buffers();
-	// dump_objects();
 	exit(0);
 	return NULL;
 }
@@ -715,8 +699,16 @@ F_defun(objectp args)
 	body->vcar = new_object(OBJ_IDENTIFIER);
 	body->vcar->value.id = strdup("LAMBDA");
 	body->vcdr = new_object(OBJ_CONS);
-	body->vcdr->vcar = cdr(car(args));
-	body->vcdr->vcdr = cdr(args);
+	if (cdr(car(args)) == nil)
+	{
+		body->vcdr->vcar = nil;
+		body->vcdr->vcdr = cdr(args);
+	}
+	else
+	{
+		body->vcdr->vcar = cdr(car(args));
+		body->vcdr->vcdr = cdr(args);
+	}
 	set_object(car(car(args)), body);
 	return body;
 }
@@ -1006,7 +998,13 @@ F_push(objectp args)
 objectp
 F_dump(objectp args)
 {
-	dump_objects();
+	objectp pn;
+	pn = eval(car(args));
+	if(pn == nil) {
+		dump_object(0);
+	} else if(pn->type == OBJ_INTEGER && pn->value.i >=3 && pn->value.i <= 7) {
+	dump_object(pn->value.i);
+	}
 	return nil;
 }
 
