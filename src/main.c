@@ -3,7 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <setjmp.h>
-
+#include <time.h>
 #include "sisp.h"
 #include "extern.h"
 #include "eval.h"
@@ -29,6 +29,8 @@ process_file(void)
 	while (true)
 	{
 		p = TRY;
+		done_lex();
+
 		if (p != NULL)
 			q = GET(p);
 		else
@@ -44,10 +46,12 @@ process_stdin(void)
 	objectp p, q;
 	p = q = NULL;
 	init_lex();
+
 	while (1)
 	{
 		printf(": ");
 		p = TRY;
+		done_lex();
 		if (p != NULL)
 			q = GET(p);
 		else
@@ -66,7 +70,7 @@ void process_input(char *filename)
 	{
 		if ((input_file = fopen(filename, "r")) == NULL)
 		{
-			printf("; %s: FILE NOT FOUND\n", filename);
+			fprintf(stderr, "; %s: FILE NOT FOUND\n", filename);
 			return;
 		}
 	}

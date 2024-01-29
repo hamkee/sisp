@@ -56,7 +56,7 @@ struct object_pair
 typedef struct
 {
   char *name;
-  objectp (*func)(objectp args);
+  objectp (*func)(const struct object *args);
 } funcs;
 
 #define vcar value.c.car

@@ -40,9 +40,9 @@
 #define cadr(p) car(cdr(p))
 #define caar(p) car(car(p))
 #define cdar(p) cdr(car(p))
-extern objectp eval_bquote(objectp);
-objectp eval_rat(objectp);
-objectp eval_cons(objectp);
+objectp eval_bquote(objectp);
+objectp eval_rat(const struct object *);
+objectp eval_cons(const struct object *);
 
 #define _EVAL_H
 

@@ -130,8 +130,10 @@ void remove_object(objectp name)
 				setobjs_list = next;
 			else
 				prev->next = next;
-			if (p->value->type == OBJ_IDENTIFIER)
-				free(p->value->value.id);
+			// may be used
+			// if (p->value->type == OBJ_IDENTIFIER) {
+			// 	free(p->value->value.id);
+			// 	}
 			free(p);
 			break;
 		}
@@ -176,7 +178,7 @@ try_object(objectp name)
 }
 
 objectp
-get_object(objectp name)
+get_object(const struct object *name)
 {
 	object_pairp p;
 
@@ -280,10 +282,7 @@ void garbage_collect(void)
 			if (p->gc != gc_id && p != null)
 			{
 				if (prev == NULL)
-				{
-					printf("WOWOWOW!!!\n");
 					pool[i].head.u = next;
-				}
 				else
 					prev->next = next;
 				p->next = pool[i].head.f;

@@ -30,12 +30,16 @@ void init_lex(void)
 {
 	token_buffer_max = 64;
 	token_buffer = (char *)malloc(token_buffer_max);
+	memset(token_buffer, 0, token_buffer_max);
+
 	lex_bufp = lex_buf;
 }
 
 void done_lex(void)
 {
-	free(token_buffer);
+	token_buffer_max = 64;
+	token_buffer = (char *)realloc(token_buffer, token_buffer_max);
+	memset(token_buffer, 0, token_buffer_max);
 }
 
 static char *

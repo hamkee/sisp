@@ -18,16 +18,17 @@ compar(const void *p1, const void *p2)
 objectp
 handsig(const char *str)
 {
-	printf("; %s.", str);
+	fprintf(stderr, "; %s.", str);
 	longjmp(je, 1);
 	return null;
 }
 
 objectp
-eval_rat(objectp args)
+eval_rat(const struct object *args)
 {
 	long int n, d, g;
 	bool sign = true;
+	objectp result;
 	n = args->value.r.n;
 	d = args->value.r.d;
 
@@ -46,20 +47,20 @@ eval_rat(objectp args)
 
 	if (d / g == 1L)
 	{
-		args = new_object(OBJ_INTEGER);
-		args->value.i = n / g;
+		result = new_object(OBJ_INTEGER);
+		result->value.i = n / g;
 		if (!sign)
-			args->value.i = -args->value.i;
+			result->value.i = -args->value.i;
 	}
 	else
 	{
-		args->value.r.n = n / g;
-		args->value.r.d = d / g;
+		result = new_object(OBJ_RATIONAL);
+		result->value.r.n = n / g;
+		result->value.r.d = d / g;
 		if (!sign)
-			args->value.r.n = -args->value.r.n;
+			result->value.r.n = -args->value.r.n;
 	}
-
-	return args;
+	return result;
 }
 
 static objectp
@@ -130,15 +131,13 @@ eval_bquote(objectp args)
 {
 	objectp p1, r, first, prev;
 	first = prev = NULL;
-
 	do
 	{
 		p1 = car(args);
 		r = new_object(OBJ_CONS);
 		if (p1->type == OBJ_CONS)
 			r->vcar = eval_bquote(p1);
-		else if (p1->type == OBJ_IDENTIFIER &&
-				 !strcmp(p1->value.id, "COMMA"))
+		else if (p1->type == OBJ_IDENTIFIER && !strcmp(p1->value.id, "COMMA"))
 		{
 			r->vcar = eval(args);
 			if (first == NULL)
@@ -161,15 +160,18 @@ eval_bquote(objectp args)
 }
 
 objectp
-eval_cons(objectp p)
+eval_cons(const struct object * p)
 {
-	objectp func_name;
+	objectp func_name, q;
 	funcs key, *item;
 	int n_args = 0;
-
 	ASSERTP(car(p)->type != OBJ_IDENTIFIER, EVAL_CONS);
-	if (!strcmp(car(p)->value.id, "LAMBDA"))
-		return p;
+
+	if (!strcmp(car(p)->value.id, "LAMBDA")) {
+		q = new_object(OBJ_IDENTIFIER);
+		q->value.id = strdup("LAMBDA");
+		return q;
+	}
 	key.name = car(p)->value.id;
 	if ((item = bsearch(&key, functions,
 						sizeof(functions) / sizeof(functions[0]),
@@ -178,7 +180,7 @@ eval_cons(objectp p)
 	func_name = get_object(car(p));
 	if (card(cdr(p)) != (n_args = card(cadr(func_name))))
 	{
-		printf("; %s: EXPECTED %d ARGUMENTS.", car(p)->value.id, n_args);
+		fprintf(stderr, "; %s: EXPECTED %d ARGUMENTS.", car(p)->value.id, n_args);
 		longjmp(je, 1);
 	}
 

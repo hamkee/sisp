@@ -38,12 +38,12 @@
 	} while ((EXPR = cdr(EXPR)) != nil);
 
 static objectp
-F_less(objectp args)
+F_less(const struct object *args)
 {
 	objectp arg1, arg2;
 	arg1 = eval(car(args));
 	arg2 = eval(cadr(args));
-	__ASSERTP(arg1->type + arg2->type < 10, NON NUMERIC ARGUMENT, <);
+	__ASSERTP(arg1->type + arg2->type < 10, NON NUMERIC ARGUMENT, <=);
 
 	if (arg1->type == OBJ_INTEGER)
 	{
@@ -63,7 +63,7 @@ F_less(objectp args)
 }
 
 static objectp
-F_lesseq(objectp args)
+F_lesseq(const struct object *args)
 {
 	objectp arg1, arg2;
 	arg1 = eval(car(args));
@@ -88,7 +88,7 @@ F_lesseq(objectp args)
 }
 
 static objectp
-F_great(objectp args)
+F_great(const struct object *args)
 {
 	objectp arg1, arg2;
 	arg1 = eval(car(args));
@@ -113,7 +113,7 @@ F_great(objectp args)
 }
 
 static objectp
-F_greateq(objectp args)
+F_greateq(const struct object *args)
 {
 	objectp arg1, arg2;
 	arg1 = eval(car(args));
@@ -138,7 +138,7 @@ F_greateq(objectp args)
 }
 
 static objectp
-F_add(objectp args)
+F_add(const struct object *args)
 {
 	long int i, d, n, g;
 	objectp p;
@@ -178,7 +178,7 @@ F_add(objectp args)
 }
 
 static objectp
-F_prod(objectp args)
+F_prod(const struct object *args)
 {
 	long int i, d, n, g;
 	objectp p;
@@ -216,7 +216,7 @@ F_prod(objectp args)
 }
 
 static objectp
-F_div(objectp args)
+F_div(const struct object *args)
 {
 	long int g, u, v;
 	objectp d, n, rat;
@@ -267,18 +267,18 @@ F_div(objectp args)
 	return rat;
 }
 
-__inline__ static objectp F_car(objectp args)
+__inline__ static objectp F_car(const struct object *args)
 {
 	return car(eval(car(args)));
 }
 
-__inline__ static objectp F_cdr(objectp args)
+__inline__ static objectp F_cdr(const struct object *args)
 {
 	return cdr(eval(car(args)));
 }
 
 objectp
-F_atom(objectp args)
+F_atom(const struct object *args)
 {
 	switch (eval(car(args))->type)
 	{
@@ -296,7 +296,7 @@ F_atom(objectp args)
 }
 
 objectp
-F_consp(objectp args)
+F_consp(const struct object *args)
 {
 	objectp p;
 	p = eval(car(args));
@@ -305,7 +305,7 @@ F_consp(objectp args)
 	return nil;
 }
 objectp
-F_loadfile(objectp args)
+F_loadfile(const struct object *args)
 {
 	objectp p;
 	size_t i;
@@ -328,7 +328,7 @@ F_loadfile(objectp args)
 }
 
 objectp
-F_typeof(objectp args)
+F_typeof(const struct object *args)
 {
 	objectp p;
 	p = new_object(OBJ_IDENTIFIER);
@@ -360,13 +360,13 @@ F_typeof(objectp args)
 }
 
 objectp
-F_if(objectp args)
+F_if(const struct object *args)
 {
 	return eval(car(args)) != nil ? eval(cadr(args)) : F_progn(cddr(args));
 }
 
 objectp
-F_cond(objectp args)
+F_cond(const struct object *args)
 {
 	do
 	{
@@ -377,7 +377,7 @@ F_cond(objectp args)
 }
 
 objectp
-F_ord(objectp args)
+F_ord(const struct object *args)
 {
 	objectp q, p;
 	register int i;
@@ -405,7 +405,7 @@ F_ord(objectp args)
 }
 
 objectp
-F_cons(objectp args)
+F_cons(const struct object *args)
 {
 	objectp p;
 	p = new_object(OBJ_CONS);
@@ -415,7 +415,7 @@ F_cons(objectp args)
 }
 
 objectp
-F_list(objectp args)
+F_list(const struct object *args)
 {
 	objectp first = NULL, prev = NULL, p1;
 	do
@@ -432,7 +432,7 @@ F_list(objectp args)
 }
 
 objectp
-F_map(objectp args)
+F_map(const struct object *args)
 {
 	objectp p, p1, first, prev;
 
@@ -477,7 +477,7 @@ F_map(objectp args)
 }
 
 objectp
-F_quit(objectp args)
+F_quit(const struct object *args)
 {
 	clean_pools();
 	clean_objects();
@@ -487,13 +487,13 @@ F_quit(objectp args)
 }
 
 objectp
-F_quote(objectp args)
+F_quote(const struct object *args)
 {
 	return car(args);
 }
 
 objectp
-F_and(objectp args)
+F_and(const struct object *args)
 {
 	objectp p1;
 	do
@@ -506,7 +506,7 @@ F_and(objectp args)
 }
 
 objectp
-F_or(objectp args)
+F_or(const struct object *args)
 {
 	objectp p1;
 	do
@@ -519,13 +519,13 @@ F_or(objectp args)
 }
 
 objectp
-F_not(objectp args)
+F_not(const struct object *args)
 {
 	return eval(car(args)) != nil ? nil : t;
 }
 
 objectp
-F_xor(objectp args)
+F_xor(const struct object *args)
 {
 	objectp first;
 	first = eval(car(args));
@@ -538,7 +538,7 @@ F_xor(objectp args)
 }
 
 objectp
-F_assoc(objectp args)
+F_assoc(const struct object *args)
 {
 	objectp var, val;
 	objectp assoc;
@@ -569,7 +569,7 @@ F_assoc(objectp args)
 }
 
 __inline__ objectp
-F_progn(objectp args)
+F_progn(const struct object *args)
 {
 	do
 	{
@@ -581,7 +581,7 @@ F_progn(objectp args)
 }
 
 objectp
-F_prog1(objectp args)
+F_prog1(const struct object *args)
 {
 	objectp p1;
 	p1 = eval(car(args));
@@ -596,7 +596,7 @@ F_prog1(objectp args)
 }
 
 objectp
-F_prog2(objectp args)
+F_prog2(const struct object *args)
 {
 	objectp p1;
 	eval(car(args));
@@ -615,7 +615,7 @@ F_prog2(objectp args)
 }
 
 objectp
-F_eq(objectp args)
+F_eq(const struct object *args)
 {
 	objectp a, b;
 	a = eval(car(args));
@@ -643,7 +643,7 @@ F_eq(objectp args)
 }
 
 objectp
-F_member(objectp args)
+F_member(const struct object *args)
 {
 	objectp m, x, set;
 	m = eval(car(args));
@@ -692,7 +692,7 @@ F_member(objectp args)
 }
 
 objectp
-F_defun(objectp args)
+F_defun(const struct object *args)
 {
 	objectp body;
 	body = new_object(OBJ_CONS);
@@ -714,7 +714,7 @@ F_defun(objectp args)
 }
 
 objectp
-F_setq(objectp args)
+F_setq(const struct object *args)
 {
 	objectp p2;
 	if (car(args)->type == OBJ_CONS)
@@ -728,13 +728,13 @@ F_setq(objectp args)
 }
 
 objectp
-F_lambda(objectp args)
+F_lambda(const struct object *args)
 {
 	return cdr(args);
 }
 
 objectp
-F_pair(objectp args)
+F_pair(const struct object *args)
 {
 	objectp p, p1, p2, first = NULL, prev = NULL;
 	p1 = eval(car(args));
@@ -759,7 +759,7 @@ F_pair(objectp args)
 }
 
 objectp
-F_append(objectp args)
+F_append(const struct object *args)
 {
 	objectp p, p1, first, prev;
 	first = prev = NULL;
@@ -783,19 +783,26 @@ F_append(objectp args)
 }
 
 objectp
-F_bquote(objectp args)
+F_bquote(const struct object *args)
 {
-	return car(args)->type == OBJ_IDENTIFIER ? car(args) : car(eval_bquote(args));
+	objectp p;
+	if (car(args)->type == OBJ_IDENTIFIER)
+		return car(args);
+
+	p = new_object(OBJ_CONS);
+	p->value.c.car = args->value.c.car;
+	p->value.c.cdr = args->value.c.cdr;
+	return car(eval_bquote(p));
 }
 
 objectp
-F_comma(objectp args)
+F_comma(const struct object *args)
 {
 	return eval(car(args));
 }
 
 objectp
-F_let(objectp args)
+F_let(const struct object *args)
 {
 	objectp var, bind, bind_list, body, r, q, first, prev;
 	first = prev = NULL;
@@ -836,7 +843,7 @@ F_let(objectp args)
 }
 
 objectp
-F_subst(objectp args)
+F_subst(const struct object *args)
 {
 	objectp sym, val, body;
 	val = eval(car(args));
@@ -860,7 +867,7 @@ F_subst(objectp args)
 }
 
 objectp
-F_labels(objectp args)
+F_labels(const struct object *args)
 {
 	objectp var, bind, bind_list, body, r, q, s, first, prev;
 	first = prev = NULL;
@@ -908,13 +915,13 @@ F_labels(objectp args)
 }
 
 objectp
-F_eval(objectp args)
+F_eval(const struct object *args)
 {
 	return eval(eval(car(args)));
 }
 
 objectp
-F_defmacro(objectp args)
+F_defmacro(const struct object *args)
 {
 	objectp func_name, aux, body;
 
@@ -936,7 +943,7 @@ F_defmacro(objectp args)
 }
 
 objectp
-F_evlis(objectp args)
+F_evlis(const struct object *args)
 {
 	objectp p, first, prev;
 	first = prev = NULL;
@@ -956,7 +963,7 @@ F_evlis(objectp args)
 }
 
 objectp
-F_pop(objectp stack)
+F_pop(const struct object *stack)
 {
 	objectp p, q, r;
 	ASSERTP(car(stack)->type != OBJ_IDENTIFIER, POP);
@@ -969,7 +976,7 @@ F_pop(objectp stack)
 }
 
 objectp
-F_push(objectp args)
+F_push(const struct object *args)
 {
 	objectp s, e, r, first, prev;
 	first = prev = NULL;
@@ -996,15 +1003,14 @@ F_push(objectp args)
 }
 
 objectp
-F_dump(objectp args)
+F_dump(const struct object *args)
 {
 	objectp pn;
 	pn = eval(car(args));
-	if(pn == nil) {
+	if (pn == nil)
 		dump_object(0);
-	} else if(pn->type == OBJ_INTEGER && pn->value.i >=3 && pn->value.i <= 7) {
-	dump_object(pn->value.i);
-	}
+	else if (pn->type == OBJ_INTEGER && pn->value.i >= 3 && pn->value.i <= 7)
+		dump_object(pn->value.i);
 	return nil;
 }
 
