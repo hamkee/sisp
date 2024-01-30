@@ -50,10 +50,10 @@ process_stdin(void)
 	while (1)
 	{
 		printf(": ");
-		p = TRY;
+		p = (!setjmp(jb)) ? parse_object(0) : NULL;
 		done_lex();
 		if (p != NULL)
-			q = GET(p);
+			q = (!setjmp(je)) ? eval(p) : NULL;
 		else
 			fprintf(stderr, "; PARSER ERROR.\n");
 		if (p != NULL && q != NULL)

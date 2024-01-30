@@ -30,6 +30,10 @@ void init_lex(void)
 {
 	token_buffer_max = 64;
 	token_buffer = (char *)malloc(token_buffer_max);
+	if(token_buffer == NULL ) {
+		fprintf(stderr, "allocating memory\n");
+		return;
+	}
 	memset(token_buffer, 0, token_buffer_max);
 
 	lex_bufp = lex_buf;
@@ -37,8 +41,16 @@ void init_lex(void)
 
 void done_lex(void)
 {
+	void *tmp_buffer;
 	token_buffer_max = 64;
-	token_buffer = (char *)realloc(token_buffer, token_buffer_max);
+	tmp_buffer = (char *)realloc(token_buffer, token_buffer_max);
+	if(tmp_buffer == NULL) {
+		free(token_buffer);
+		fprintf(stderr, "memory reallocation error\n");
+		return;
+	} 
+	token_buffer = (char *) tmp_buffer;
+
 	memset(token_buffer, 0, token_buffer_max);
 }
 
@@ -46,10 +58,15 @@ static char *
 extend_buf(char *p)
 {
 	int offset;
-
+	void *tmp_buffer;
+	tmp_buffer = (char *)realloc(token_buffer, token_buffer_max);
+	if(tmp_buffer == NULL) {
+		fprintf(stderr, "memory reallocation error\n");
+		return token_buffer;
+	}
+	token_buffer = (char *) tmp_buffer;
 	offset = p - token_buffer;
 	token_buffer_max = token_buffer_max + 16;
-	token_buffer = (char *)realloc(token_buffer, token_buffer_max);
 
 	return token_buffer + offset;
 }

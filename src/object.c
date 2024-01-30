@@ -97,6 +97,8 @@ void init_objects(void)
 	for (i = 3; i <= 4; i++)
 	{
 		pool[i].head.f = malloc(OBJ_SIZE);
+		if (pool[i].head.f == NULL)
+			fprintf(stderr, "allocating memory\n");
 		pool[i].head.f->next = NULL;
 		new_heap_list = pool[i].head.f;
 		j = (i == 3 ? 63 : 511);
@@ -104,6 +106,8 @@ void init_objects(void)
 		while (j--)
 		{
 			pool[i].head.f->next = malloc(OBJ_SIZE);
+			if(pool[i].head.f->next == NULL)
+						fprintf(stderr, "allocating memory\n");
 			pool[i].head.f = pool[i].head.f->next;
 		}
 		pool[i].head.f->next = NULL;
@@ -157,6 +161,11 @@ void set_object(objectp name, objectp value)
 		}
 	}
 	p = (object_pairp)malloc(sizeof(struct object_pair));
+	if (p == NULL)
+	{
+		fprintf(stderr, "allocating memory\n");
+		return;
+	}
 	p->next = setobjs_list;
 	setobjs_list = p;
 	p->name = name;

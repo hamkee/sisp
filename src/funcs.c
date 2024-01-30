@@ -314,7 +314,11 @@ F_loadfile(const struct object *args)
 	if (p->type != OBJ_IDENTIFIER)
 		return null;
 	f_name = malloc(strlen(p->value.id) + 4);
-	f_name = strdup(p->value.id);
+	if(f_name == NULL) {
+		fprintf(stderr, "allocating memory\n");
+		return nil;
+	}
+	strncpy(f_name, p->value.id, strlen(p->value.id));
 	strcat(f_name, ".LSP");
 	for (i = 0; i < strlen(f_name); i++)
 	{
@@ -322,6 +326,7 @@ F_loadfile(const struct object *args)
 	}
 	process_input(f_name);
 	process_input(NULL);
+	free(f_name);
 	free(p->value.id);
 	free(p);
 	return nil;

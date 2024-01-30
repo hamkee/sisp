@@ -67,11 +67,15 @@ void feed_pool(a_type type)
 		units = 31;
 	pool[type].free_size = units + 1;
 	pool[type].head.f = malloc(OBJ_SIZE);
+	if (pool[type].head.f == NULL)
+		fprintf(stderr, "allocating memory\n");
 	pool[type].head.f->next = NULL;
 	new_heap_list = pool[type].head.f;
 	while (units--)
 	{
 		pool[type].head.f->next = malloc(OBJ_SIZE);
+		if (pool[type].head.f->next == NULL)
+			fprintf(stderr, "allocating memory\n");
 		pool[type].head.f = pool[type].head.f->next;
 	}
 	pool[type].head.f->next = NULL;
