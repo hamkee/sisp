@@ -314,7 +314,8 @@ F_loadfile(const struct object *args)
 	if (p->type != OBJ_IDENTIFIER)
 		return null;
 	f_name = malloc(strlen(p->value.id) + 4);
-	if(f_name == NULL) {
+	if (f_name == NULL)
+	{
 		fprintf(stderr, "allocating memory\n");
 		return nil;
 	}
@@ -1015,7 +1016,7 @@ F_dump(const struct object *args)
 	if (pn == nil)
 		dump_object(0);
 	else if (pn->type == OBJ_INTEGER && pn->value.i >= 3 && pn->value.i <= 7)
-		dump_object(pn->value.i);
+		dump_object((int)pn->value.i);
 	return nil;
 }
 

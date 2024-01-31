@@ -57,7 +57,7 @@ void done_lex(void)
 static char *
 extend_buf(char *p)
 {
-	int offset;
+	unsigned long offset;
 	void *tmp_buffer;
 	tmp_buffer = (char *)realloc(token_buffer, token_buffer_max);
 	if(tmp_buffer == NULL) {
