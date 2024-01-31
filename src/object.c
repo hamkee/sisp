@@ -272,7 +272,7 @@ static void tag_whole_tree(void)
 void garbage_collect(void)
 {
 	objectp p, prev, next;
-	objectp new_used_objs_list = t;
+	objectp new_used_objs_list;
 	int i;
 
 	if (++gc_id == UINT_MAX - 1)

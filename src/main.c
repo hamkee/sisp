@@ -23,16 +23,17 @@ void clean_buffers(void)
 static void
 process_file(void)
 {
-	objectp p, q;
-	p = q = NULL;
+	objectp p = NULL;
 	init_lex();
 	while (true)
 	{
-		p = TRY;
+		p = (!setjmp(jb)) ? parse_object(0) : NULL;
 		done_lex();
-
 		if (p != NULL)
-			q = GET(p);
+		{
+			if (!setjmp(je))
+				eval(p);
+		}
 		else
 			break;
 		garbage_collect();
