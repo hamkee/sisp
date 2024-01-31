@@ -1,7 +1,0 @@
-{
-    "C_Cpp.formatting": "default",
-    "C_Cpp.vcFormat.indent.caseContents": true,
-    "C_Cpp.vcFormat.newLine.beforeElse": false,
-    "C_Cpp.vcFormat.newLine.beforeOpenBrace.block": "sameLine",
-    "C_Cpp.vcFormat.newLine.beforeOpenBrace.function": "newLine"
-}
