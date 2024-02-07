@@ -1,11 +1,13 @@
 #ifndef _EVAL_H
 
-#define ASSERTP(EXPR, F)                             \
+#define _ASSERTP(EXPR, ARG, F, OBJ)                  \
 	do                                               \
 	{                                                \
-		if (EXPR)                                    \
+		if (!(EXPR))                                 \
 		{                                            \
-			fprintf(stderr, "; " #F ": " #EXPR "."); \
+			fprintf(stderr, "; " #F ": '");			 \
+			princ_object(stderr, OBJ);				 \
+			fprintf(stderr, "' "#ARG ".");  		 \
 			longjmp(je, 1);                          \
 		}                                            \
 	} while (0)
@@ -16,25 +18,29 @@
 						 : (p->type) == OBJ_INTEGER	   ? (p)                   \
 						 : (p->type) == OBJ_RATIONAL   ? eval_rat(p)           \
 						 : (p->type) == OBJ_IDENTIFIER ? get_object(p)         \
+						 : (p->type) == OBJ_STRING	   ? (p)				   \
 						 : (p->type) == OBJ_CONS	   ? eval_cons(p)          \
 													   : (p))
 
-#define try_eval(p) (                                                  \
-	(p->type) == OBJ_T ? t : (p->type) == OBJ_NIL	   ? nil           \
-						 : (p->type) == OBJ_NULL	   ? null          \
-						 : (p->type) == OBJ_INTEGER	   ? (p)           \
-						 : (p->type) == OBJ_RATIONAL   ? eval_rat(p)   \
-						 : (p->type) == OBJ_IDENTIFIER ? try_object(p) \
-						 : (p->type) == OBJ_CONS	   ? eval_cons(p)  \
+#define try_eval(p) (                                                   \
+	(p->type) == OBJ_T ? t : (p->type) == OBJ_NIL	   ? nil            \
+						 : (p->type) == OBJ_NULL	   ? null           \
+						 : (p->type) == OBJ_INTEGER	   ? (p)            \
+						 : (p->type) == OBJ_RATIONAL   ? eval_rat(p)    \
+						 : (p->type) == OBJ_IDENTIFIER ? try_object(p)  \
+						 : (p->type) == OBJ_STRING	   ? (p) 			\
+						 : (p->type) == OBJ_CONS	   ? eval_cons(p)   \
 													   : (p))
 
-#define car(p) (                                                        \
-	(p->type) == OBJ_CONS ? p->value.c.car : (p->type) == OBJ_NIL ? nil \
-																  : handsig("UNDEFINED"))
+#define car(p) (											\
+	(p->type) == OBJ_CONS ? p->value.c.car 					\
+							: (p->type) == OBJ_NIL ? nil 	\
+							: handsig("CAR: UNDEFINED"))
 
-#define cdr(p) (                                                        \
-	(p->type) == OBJ_CONS ? p->value.c.cdr : (p->type) == OBJ_NIL ? nil \
-																  : handsig("UNDEFINED"))
+#define cdr(p) (                                            \
+	(p->type) == OBJ_CONS ? p->value.c.cdr					\
+							: (p->type) == OBJ_NIL ? nil 	\
+							: handsig("CDR: UNDEFINED"))
 
 #define cddr(p) cdr(cdr(p))
 #define cadr(p) car(cdr(p))

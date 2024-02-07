@@ -27,20 +27,19 @@ objectp
 eval_rat(const struct object *args)
 {
 	long int n, d, g;
-	bool sign = true;
+	short sign = 0;
 	objectp result;
 	n = args->value.r.n;
 	d = args->value.r.d;
-
-	ASSERTP(d == 0L, RATIONAL);
+	_ASSERTP(d != 0L, DIVISION BY ZERO, EVAL, null);
 	if (n < 0)
 	{
-		sign = false;
+		sign = 1;
 		n = -n;
 	}
 	if (d < 0)
 	{
-		sign = false;
+		sign += 1;
 		d = -d;
 	}
 	g = gcd(n, d);
@@ -49,17 +48,18 @@ eval_rat(const struct object *args)
 	{
 		result = new_object(OBJ_INTEGER);
 		result->value.i = n / g;
-		if (!sign)
-			result->value.i = -args->value.i;
+		if (sign == 1)
+			result->value.i = -result->value.i;
 	}
 	else
 	{
 		result = new_object(OBJ_RATIONAL);
 		result->value.r.n = n / g;
 		result->value.r.d = d / g;
-		if (!sign)
-			result->value.r.n = -args->value.r.n;
+		if (sign == 1)
+			result->value.r.n = -result->value.r.n;
 	}
+
 	return result;
 }
 
@@ -142,9 +142,9 @@ eval_bquote(objectp args)
 			r->vcar = eval(args);
 			if (first == NULL)
 				first = r;
-			if (prev != NULL)
-				prev->vcdr = r;
-			prev = r;
+			// if (prev != NULL)
+			// 	prev->vcdr = r;
+			// prev = r;
 			return car(first);
 		}
 		else
@@ -160,14 +160,15 @@ eval_bquote(objectp args)
 }
 
 objectp
-eval_cons(const struct object * p)
+eval_cons(const struct object *p)
 {
 	objectp func_name, q;
 	funcs key, *item;
-	int n_args = 0;
-	ASSERTP(car(p)->type != OBJ_IDENTIFIER, EVAL_CONS);
+	unsigned long n_args = 0;
+	_ASSERTP(car(p)->type == OBJ_IDENTIFIER, NOT A FUNCTION, EVAL, car(p));
 
-	if (!strcmp(car(p)->value.id, "LAMBDA")) {
+	if (!strcmp(car(p)->value.id, "LAMBDA"))
+	{
 		q = new_object(OBJ_IDENTIFIER);
 		q->value.id = strdup("LAMBDA");
 		return q;
@@ -180,7 +181,7 @@ eval_cons(const struct object * p)
 	func_name = get_object(car(p));
 	if (card(cdr(p)) != (n_args = card(cadr(func_name))))
 	{
-		fprintf(stderr, "; %s: EXPECTED %d ARGUMENTS.", car(p)->value.id, n_args);
+		fprintf(stderr, "; %s: EXPECTED %lu ARGUMENTS.", car(p)->value.id, n_args);
 		longjmp(je, 1);
 	}
 

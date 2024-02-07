@@ -15,8 +15,11 @@
 		XUNGETC(c);                                 \
 		while (((c = XGETC()) == '\n') && c != EOF) \
 			;                                       \
-		longjmp(jl, 1);                             \
+		memset(token_buffer, 0, token_buffer_max);	\
+		longjmp(jl,1);								\
 	} while (0)
+
+//		longjmp(jl, 1);                             
 
 FILE *input_file;
 static int lex_buf[4]; // 2 enough
@@ -55,7 +58,7 @@ void done_lex(void)
 }
 
 static char *
-extend_buf(char *p)
+extend_buf(const char *p)
 {
 	unsigned long offset;
 	void *tmp_buffer;
@@ -120,7 +123,7 @@ int gettoken(void)
 		case '\f': case '\t': case '\v': case '\r': case '\n':
 			break;
 		case ';':
-			while ((c = XGETC()) != '\n')
+			while (XGETC() != '\n')
 				;
 			break;
 		case '0': case '1': case '2': case '3':
@@ -140,6 +143,13 @@ int gettoken(void)
 				*p = '\0';
 				return INTEGER;
 			} else if (c == '/') {
+				if (p - token_buffer >= token_buffer_max)
+					p = extend_buf(p);
+				*p++ = c;
+				c = XGETC();
+				if(c != '-' && !isdigit(c)) {
+						CLEAN_BUFFER;
+				} 
 				do
 				{
 					if (p - token_buffer >= token_buffer_max)
@@ -155,6 +165,19 @@ int gettoken(void)
 				}
 			} else
 				CLEAN_BUFFER;
+		case '"':
+		c = XGETC();
+			p = token_buffer;
+			do
+			{
+				if (p - token_buffer >= token_buffer_max)
+					p = extend_buf(p);
+				*p++ = c;
+				c = XGETC();
+			} while (c != '"');
+//			*p++ = c;
+			*p++ = '\0';
+			return STRING;
 		case '*': case '+': case '/': case '<': case '=': case '>': case '_':
 		case '#': case 'A': case 'B': case 'C': case 'D': case 'E': case 'F': 
 		case 'G': case 'H': case 'I': case 'J': case 'K': case 'L': case 'M': 

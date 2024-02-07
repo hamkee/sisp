@@ -17,6 +17,8 @@ void clean_pools(void)
 			pool[i].head.u = pool[i].head.u->next;
 			if (p->type == OBJ_IDENTIFIER)
 				free(p->value.id);
+			if (p->type == OBJ_STRING)
+				free(p->value.s.str);
 			free(p);
 		}
 		while ((p = pool[i].head.f) != NULL)
@@ -35,11 +37,11 @@ void recycle_pool(a_type type)
 	objectp p;
 
 	if (type == OBJ_IDENTIFIER)
-		chunk_size = 128;
-	else if (type == OBJ_CONS)
-		chunk_size = 1024;
-	else
 		chunk_size = 64;
+	else if (type == OBJ_CONS)
+		chunk_size = 128;
+	else
+		chunk_size = 32;
 	if (pool[type].head.f == NULL)
 		return;
 	while (pool[type].free_size > chunk_size)
@@ -60,14 +62,15 @@ void feed_pool(a_type type)
 	objectp new_heap_list;
 
 	if (type == OBJ_IDENTIFIER)
-		units = 63;
-	else if (type == OBJ_CONS)
-		units = 511;
-	else
 		units = 31;
+	else if (type == OBJ_CONS)
+		units = 255;
+	else
+		units = 15;
 	pool[type].free_size = units + 1;
 	pool[type].head.f = malloc(OBJ_SIZE);
-	if (pool[type].head.f == NULL) {
+	if (pool[type].head.f == NULL)
+	{
 		fprintf(stderr, "allocating memory\n");
 		return;
 	}
@@ -76,7 +79,8 @@ void feed_pool(a_type type)
 	while (units--)
 	{
 		pool[type].head.f->next = malloc(OBJ_SIZE);
-		if (pool[type].head.f->next == NULL) {
+		if (pool[type].head.f->next == NULL)
+		{
 			fprintf(stderr, "allocating memory\n");
 			return;
 		}
@@ -87,16 +91,16 @@ void feed_pool(a_type type)
 }
 
 objectp
-oballoc(a_type OBJ_TYPE)
+oballoc(a_type obj_type)
 {
 	objectp p;
-	if (OBJ_TYPE <= 2)
+	if (obj_type <= 2)
 		return malloc(OBJ_SIZE);
-	if (pool[OBJ_TYPE].free_size == 0)
-		feed_pool(OBJ_TYPE);
-	p = pool[OBJ_TYPE].head.f;
-	pool[OBJ_TYPE].head.f = pool[OBJ_TYPE].head.f->next;
-	pool[OBJ_TYPE].free_size--;
+	if (pool[obj_type].free_size == 0)
+		feed_pool(obj_type);
+	p = pool[obj_type].head.f;
+	pool[obj_type].head.f = pool[obj_type].head.f->next;
+	pool[obj_type].free_size--;
 
 	return p;
 }

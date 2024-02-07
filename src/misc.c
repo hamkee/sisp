@@ -21,8 +21,12 @@ void princ_object(FILE *fout, objectp p)
 		if (p->value.id != NULL)
 			fputs(p->value.id, fout);
 		break;
+	case OBJ_STRING:
+		if (p->value.s.str != NULL)
+			fprintf(fout, "\"%s\"", p->value.s.str);
+		break;
 	case OBJ_NULL:
-		fputs("UNDEFINED", fout);
+		fputs("", fout);
 		break;
 	case OBJ_INTEGER:
 		fprintf(fout, "%li", p->value.i);
@@ -71,9 +75,11 @@ eqcons(objectp a, objectp b)
 				   : nil;
 	case OBJ_T:
 	case OBJ_NIL:
-		return (a->type == b->type) ? t : nil;
+		return t;
 	case OBJ_IDENTIFIER:
 		return strcmp(a->value.id, b->value.id) == 0 ? t : nil;
+	case OBJ_STRING:
+		return strcmp(a->value.s.str, b->value.s.str) == 0 ? t : nil;
 	case OBJ_CONS:
 		c = eqcons(car(a), car(b));
 		if (c == nil)
@@ -104,7 +110,7 @@ gcd(long int a, long int b)
 	return a;
 }
 
-int card(objectp p)
+unsigned long card(objectp p)
 {
 	register int i = 0;
 	while (p != nil && p->type == OBJ_CONS)
@@ -136,6 +142,9 @@ sst(objectp b, objectp v, objectp body)
 			case OBJ_IDENTIFIER:
 				q->vcar = (!strcmp(p->value.id, b->value.id)) ? v : p;
 				break;
+			case OBJ_STRING:
+				q->vcar = (!strcmp(p->value.s.str, b->value.s.str)) ? v : p;
+				break;
 			case OBJ_INTEGER:
 				q->vcar = (p->value.i == b->value.i) ? v : p;
 				break;
@@ -148,9 +157,7 @@ sst(objectp b, objectp v, objectp body)
 			case OBJ_CONS:
 				q->vcar = (eqcons(b, p) == t) ? v : p;
 				if (q->vcar == p)
-				{
 					q->vcar = sst(b, v, p);
-				}
 				break;
 			default:
 				q->vcar = p;
@@ -162,6 +169,6 @@ sst(objectp b, objectp v, objectp body)
 			prev->vcdr = q;
 		prev = q;
 	} while ((body = cdr(body)) != nil);
-
+	
 	return first;
 }

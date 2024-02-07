@@ -12,16 +12,6 @@
 #include "misc.h"
 #include "vmm.h"
 
-#define HANDSIG(ARG, EXP)                   \
-	do                                      \
-	{                                       \
-		if (ARG == NULL)                    \
-		{                                   \
-			fprintf(stderr, "; " #EXP "."); \
-			longjmp(je, 1);                 \
-		}                                   \
-	} while (0)
-
 objectp nil;
 objectp t;
 objectp null;
@@ -42,12 +32,14 @@ new_object(a_type type)
 	pool[type].used_size++;
 	if (type == OBJ_CONS)
 		p->vcar = p->vcdr = nil;
+	if (type == OBJ_STRING)
+		p->value.s.len = 0;
 
 	return p;
 }
 
 __inline__ objectp
-search_object_rational(long int num, long int den)
+search_object_rational(const long int num, const long int den)
 {
 	objectp p;
 
@@ -59,7 +51,7 @@ search_object_rational(long int num, long int den)
 }
 
 __inline__ objectp
-search_object_integer(long int i)
+search_object_integer(const long int i)
 {
 	objectp p;
 
@@ -69,9 +61,19 @@ search_object_integer(long int i)
 
 	return (objectp)NULL;
 }
-
 __inline__ objectp
-search_object_identifier(char *s)
+search_object_string(const char *s)
+{
+	objectp p;
+
+	for (p = pool[OBJ_STRING].head.u; p != NULL; p = p->next)
+		if (!strcmp(p->value.s.str, s))
+			return p;
+
+	return (objectp)NULL;
+}
+__inline__ objectp
+search_object_identifier(const char *s)
 {
 	objectp p;
 
@@ -87,7 +89,11 @@ void init_objects(void)
 	int i, j;
 	objectp new_heap_list = NULL;
 
-	for (i = 3; i < 7; i++)
+	null = new_object(OBJ_NULL);
+	nil = new_object(OBJ_NIL);
+	t = new_object(OBJ_T);
+
+	for (i = 3; i <= 7; i++)
 	{
 		pool[i].head.u = NULL;
 		pool[i].head.f = NULL;
@@ -101,21 +107,18 @@ void init_objects(void)
 			fprintf(stderr, "allocating memory\n");
 		pool[i].head.f->next = NULL;
 		new_heap_list = pool[i].head.f;
-		j = (i == 3 ? 63 : 511);
+		j = (i == 3 ? 31 : 255);
 		pool[i].free_size = j + 1;
 		while (j--)
 		{
 			pool[i].head.f->next = malloc(OBJ_SIZE);
-			if(pool[i].head.f->next == NULL)
-						fprintf(stderr, "allocating memory\n");
+			if (pool[i].head.f->next == NULL)
+				fprintf(stderr, "allocating memory\n");
 			pool[i].head.f = pool[i].head.f->next;
 		}
 		pool[i].head.f->next = NULL;
 		pool[i].head.f = new_heap_list;
 	}
-	null = new_object(OBJ_NULL);
-	nil = new_object(OBJ_NIL);
-	t = new_object(OBJ_T);
 }
 
 void remove_object(objectp name)
@@ -148,7 +151,11 @@ void set_object(objectp name, objectp value)
 {
 	object_pairp p, next;
 
-	HANDSIG(value, SET OBJECT);
+	if (value == NULL)
+	{
+		fprintf(stderr, "; SET OBJECT: NULL VALUE.");
+		longjmp(je, 1);
+	}
 	for (p = setobjs_list; p != NULL; p = next)
 	{
 		next = p->next;
@@ -173,7 +180,7 @@ void set_object(objectp name, objectp value)
 }
 
 objectp
-try_object(objectp name)
+try_object(const struct object *name)
 {
 	object_pairp p;
 
@@ -190,14 +197,17 @@ objectp
 get_object(const struct object *name)
 {
 	object_pairp p;
-
-	HANDSIG(name, GETOBJECT);
+	if(name == NULL) {
+		fprintf(stderr, "; GET OBJECT: NULL NAME.");
+		longjmp(je, 1);
+	}
 	for (p = setobjs_list; p != NULL; p = p->next)
 		if (p->name->type == OBJ_IDENTIFIER &&
 			!strcmp(name->value.id, p->name->value.id))
 			return p->value;
 
-	HANDSIG(NULL, OBJECT NOT FOUND);
+		fprintf(stderr, "; OBJECT '%s' NOT FOUND.", name->value.id);
+		longjmp(je, 1);
 	return null;
 }
 
@@ -227,10 +237,10 @@ void dump_object(int pool_number)
 			princ_object(stdout, p->value);
 			printf("\n");
 		}
-		for (i = 3; i < 7; i++)
-			printf("|%6zd %6zd|\n", pool[i].used_size, pool[i].free_size);
+		for (i = 0; i <= 7; i++)
+			printf("|%6zu %6zu|\n", pool[i].used_size, pool[i].free_size);
 	}
-	else if (pool_number >= 3 && pool_number < 7)
+	else if (pool_number >= 3 && pool_number <= 7)
 	{
 		for (q = pool[pool_number].head.u; q != NULL; q = q->next)
 		{
@@ -238,7 +248,7 @@ void dump_object(int pool_number)
 			printf(" ");
 		}
 		printf("\n");
-		printf("|%6zd %6zd|\n", pool[pool_number].used_size, pool[pool_number].free_size);
+		printf("|%6zu %6zu|\n", pool[pool_number].used_size, pool[pool_number].free_size);
 	}
 	else
 	{
@@ -280,7 +290,7 @@ void garbage_collect(void)
 
 	tag_whole_tree();
 
-	for (i = 3; i < 7; i++)
+	for (i = 3; i <= 7; i++)
 	{
 		prev = NULL;
 		new_used_objs_list = NULL;

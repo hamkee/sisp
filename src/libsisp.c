@@ -16,8 +16,10 @@ int write_m(int fd)
 	int i;
 	static int NELEMS;
 	NELEMS = sizeof(builtin_functions) / sizeof(builtin_functions[0]);
-	lseek(fd, FILE_LENGTH + 1, SEEK_SET);
-	lseek(fd, 0, SEEK_SET);
+	if (lseek(fd, FILE_LENGTH + 1, SEEK_SET) == -1)
+		return -1;
+	if (lseek(fd, 0, SEEK_SET) == -1)
+		return -1;
 	for (i = 0; i < NELEMS; i++)
 		if (write(fd, builtin_functions[i], strlen(builtin_functions[i])) == -1)
 			return -1;

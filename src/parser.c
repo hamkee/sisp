@@ -103,6 +103,13 @@ parse_object(int havetoken)
 			p->value.id = strdup(token_buffer);
 		}
 		break;
+		case STRING:
+		if ((p = search_object_string(token_buffer)) == NULL) {
+			p = new_object(OBJ_STRING);
+			p->value.s.str = strdup(token_buffer);
+			p->value.s.len = strlen(p->value.s.str);
+		}
+		break;
 	case INTEGER:
 		n = strtol(token_buffer, NULL, 10);
 		if ((p = search_object_integer(n)) == NULL)

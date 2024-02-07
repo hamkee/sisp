@@ -1,7 +1,8 @@
 #ifndef SISP_H
-#define IDENTIFIER 7
-#define INTEGER 8
-#define RATIONAL 9
+#define IDENTIFIER  3
+#define INTEGER     5
+#define RATIONAL    6
+#define STRING      7
 #define OBJ_SIZE sizeof(struct object)
 
 typedef enum
@@ -17,7 +18,8 @@ typedef enum
   OBJ_IDENTIFIER,
   OBJ_CONS,
   OBJ_INTEGER,
-  OBJ_RATIONAL
+  OBJ_RATIONAL,
+  OBJ_STRING,
 } a_type;
 
 typedef struct object *objectp;
@@ -30,6 +32,10 @@ struct object
   {
     char *id;
     long int i;
+    struct {
+      char *str;
+      long int len;
+    } s;
     struct
     {
       long int n;

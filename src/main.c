@@ -9,9 +9,6 @@
 #include "eval.h"
 #include "misc.h"
 
-#define GET(p) ((!setjmp(je)) ? eval(p) : NULL)
-#define TRY ((!setjmp(jb)) ? parse_object(0) : NULL)
-
 jmp_buf jb, je;
 
 void clean_buffers(void)
@@ -56,7 +53,7 @@ process_stdin(void)
 		if (p != NULL)
 			q = (!setjmp(je)) ? eval(p) : NULL;
 		else
-			fprintf(stderr, "; PARSER ERROR.\n");
+			fprintf(stderr, "; PARSER ERROR.");
 		if (p != NULL && q != NULL)
 			princ_object(stdout, q);
 		puts("");
@@ -65,7 +62,7 @@ process_stdin(void)
 	free(token_buffer);
 }
 
-void process_input(char *filename)
+void process_input(const char *filename)
 {
 	if (filename != NULL && strcmp(filename, "-") != 0)
 	{
