@@ -63,6 +63,7 @@ F_cat(const struct object *args)
 	result->value.s.len = arg1->value.s.len + arg2->value.s.len;
 	return result;
 }
+
 static objectp
 F_less(const struct object *args)
 {
@@ -811,7 +812,7 @@ F_append(const struct object *args)
 	do
 	{
 		p = eval(car(args));
-		_ASSERTP((p->type == OBJ_CONS && !CONSP(p)), NOT CONS, APPEND,p);
+		_ASSERTP((p->type == OBJ_CONS && !CONSP(p)), NOT CONS, APPEND, p);
 		do
 		{
 			p1 = new_object(OBJ_CONS);
@@ -917,9 +918,9 @@ F_labels(const struct object *args)
 	objectp var, bind, bind_list, body, r, q, s, first, prev;
 	first = prev = NULL;
 	bind_list = car(args);
-	_ASSERTP((bind_list->type == OBJ_CONS && bind_list != nil), NOT NON-EMPTY CONS, LABELS, bind_list);
+	_ASSERTP((bind_list->type == OBJ_CONS && bind_list != nil), EMPTY CONS, LABELS, bind_list);
 	body = cdr(args);
-	_ASSERTP((body->type == OBJ_CONS && body != nil), NOT NON-EMPTY CONS, LABELS, body);
+	_ASSERTP((body->type == OBJ_CONS && body != nil), EMPTY CONS, LABELS, body);
 
 	do
 	{
@@ -1056,7 +1057,7 @@ F_dump(const struct object *args)
 		dump_object(0);
 	else if (pn->type == OBJ_INTEGER && pn->value.i >= 3 && pn->value.i <= 7)
 		dump_object((int)pn->value.i);
-	return nil;
+	return null;
 }
 objectp
 F_undef(const struct object *args)
@@ -1088,67 +1089,98 @@ F_substr(const struct object *args)
 		return nil;
 	}
 	if (arg1->value.i + arg2->value.i > arg3->value.s.len)
-	{
 		offset = arg3->value.s.len - arg1->value.i;
-	}
 	else
-	{
 		offset = arg2->value.i;
-	}
 	result->value.s.str = (char *)malloc(offset * sizeof(char));
-	_ASSERTP(result->value.s.str, ALLOCATE MEMORY, SUBSTR, result);
+	if (result->value.s.str == NULL)
+	{
+		fprintf(stderr, "; UNABLE TO ALLOCATE MEMORY\n");
+		return nil;
+	}
 	strncpy(result->value.s.str, arg3->value.s.str + arg1->value.i, offset);
 	return result;
 }
+static int
+compar(const void *p1, const void *p2)
+{
+	return strcmp(((funcs *)p1)->name, ((funcs *)p2)->name);
+}
+
+objectp
+F_help(const struct object *args)
+{
+	objectp arg1;
+	funcs key, *item;
+	int i = 0;
+	if(args == nil) {
+		for(i=0;i<FUNCS_N;i++) {
+			printf("%s:%s\n", functions[i].name, functions[i].doc);
+		}
+		return t;
+	}
+	arg1 = car(args);
+	key.name = arg1->value.id;
+	key.func = NULL;
+	if ((item = bsearch(&key, functions,
+						sizeof(functions) / sizeof(functions[0]),
+						sizeof(functions[0]), compar)) != NULL)
+	{
+		printf("; %s:%s\n", item->name, item->doc);
+		return t;
+	}
+	return nil;
+}
 
 funcs functions[FUNCS_N] = {
-	{"*", F_prod},
-	{"+", F_add},
-	{"/", F_div},
-	{"<", F_less},
-	{"<=", F_lesseq},
-	{"=", F_eq},
-	{">", F_great},
-	{">=", F_greateq},
-	{"AND", F_and},
-	{"APPEND", F_append},
-	{"ASSOC", F_assoc},
-	{"ATOMP", F_atom},
-	{"BQUOTE", F_bquote},
-	{"CAR", F_car},
-	{"CAT", F_cat},
-	{"CDR", F_cdr},
-	{"COMMA", F_comma},
-	{"COND", F_cond},
-	{"CONS", F_cons},
-	{"CONSP", F_consp},
-	{"DEFINE", F_setq},
-	{"DEFMACRO", F_defmacro},
-	{"DUMP", F_dump},
-	{"EQ", F_eq},
-	{"EVAL", F_eval},
-	{"EVLIS", F_evlis},
-	{"IF", F_if},
-	{"LABELS", F_labels},
-	{"LET", F_let},
-	{"LIST", F_list},
-	{"LOAD", F_loadfile},
-	{"MAP", F_map},
-	{"MEMBERP", F_member},
-	{"NOT", F_not},
-	{"OR", F_or},
-	{"ORD", F_ord},
-	{"PAIR", F_pair},
-	{"POP", F_pop},
-	{"PROG1", F_prog1},
-	{"PROG2", F_prog2},
-	{"PROGN", F_progn},
-	{"PUSH", F_push},
-	{"QUIT", F_quit},
-	{"QUOTE", F_quote},
-	{"STRLEN", F_strlen},
-	{"SUBST", F_subst},
-	{"SUBSTR", F_substr},
-	{"TYPEOF", F_typeof},
-	{"UNDEF", F_undef},
-	{"XOR", F_xor}};
+	{"*", F_prod, "(NUM_1 ... NUM_k) -> NUM"},
+	{"+", F_add, "(NUM_1 ... NUM_k) -> NUM"},
+	{"/", F_div, "(NUM_1 ... NUM_k) -> NUM"},
+	{"<", F_less, "(NUM_1 NUM_2) -> [NIL|T]"},
+	{"<=", F_lesseq, "(NUM_1 NUM_2) -> [NIL|T]"},
+	{"=", F_eq, "(NUM_1 NUM_2) -> [NIL|T]"},
+	{">", F_great, "(NUM_1 NUM_2) -> [NIL|T]"},
+	{">=", F_greateq, "(NUM_1 NUM_2) -> [NIL|T]"},
+	{"AND", F_and, "(BOOL_1 ... BOOL_n) -> [NIL|T]"},
+	{"APPEND", F_append, "(LIST_1 ... LIST_k) -> LIST"},
+	{"ASSOC", F_assoc, "(<= X_1 X_2)"},
+	{"ATOMP", F_atom, "X -> [NIL|T]"},
+	{"BQUOTE", F_bquote, "EXPR -> EXPR"},
+	{"CAR", F_car, "LIST -> LIST"},
+	{"CAT", F_cat, "(STRING_1 STRING_2) -> STRING"},
+	{"CDR", F_cdr, "LIST -> LIST"},
+	{"COMMA", F_comma, "EXPR -> EXPR"},
+	{"COND", F_cond, "( (EXPR_1)  -> "},
+	{"CONS", F_cons, "(X_1 X_2) -> CONS"},
+	{"CONSP", F_consp, "X -> [NIL|T]"},
+	{"DEFINE", F_setq, "(VAR_1 VAL_1 ... VAR_k VAL_k) -> VAL_k"},
+	{"DEFMACRO", F_defmacro, "(<= X_1 X_2)"},
+	{"DUMP", F_dump, "?POOL -> T"},
+	{"EQ", F_eq, "(X_1 X_2) -> [NIL|T]"},
+	{"EVAL", F_eval, "(<= X_1 X_2)"},
+	{"EVLIS", F_evlis, "(<= X_1 X_2)"},
+	{"HELP", F_help, "FUNC -> [NIL|T]"},
+	{"IF", F_if, "(COND EXPR_T EXPR_NIL) -> EXPR"},
+	{"LABELS", F_labels, "((FUN_1) ... (FUN_m)) EXPR_1 .. EXPR_k) -> EXPR_k"},
+	{"LET", F_let, "((ID_1 VAL_1) ... (ID_m VAL_m)) EXPR_1 .. EXPR_k) -> EXPR_k"},
+	{"LIST", F_list, "(X_1 X_2 .. X_k) -> LIST"},
+	{"LOAD", F_loadfile, "IDENTIFIER"},
+	{"MAP", F_map, "(FUNCTION LIST) -> LIST"},
+	{"MEMBERP", F_member, "(X_1 LIST) -> [NIL|T]"},
+	{"NOT", F_not, "BOOL -> BOOL"},
+	{"OR", F_or, "(BOOL_1 ... BOOL_n) -> [NIL|T]"},
+	{"ORD", F_ord, "LIST -> NUM"},
+	{"PAIR", F_pair, "(LIST_1 LIST_2) -> LIST"},
+	{"POP", F_pop, "STACK -> X"},
+	{"PROG1", F_prog1, "(<= X_1 X_2)"},
+	{"PROG2", F_prog2, "(<= X_1 X_2)"},
+	{"PROGN", F_progn, "(<= X_1 X_2)"},
+	{"PUSH", F_push, "(X STACK) -> STACK"},
+	{"QUIT", F_quit, ""},
+	{"QUOTE", F_quote, "X -> IDENTIFIER"},
+	{"STRLEN", F_strlen, "STRING -> NUM"},
+	{"SUBST", F_subst, "(<= X_1 X_2)"},
+	{"SUBSTR", F_substr, "(NUM_1 NUM_2 STRING) -> STRING"},
+	{"TYPEOF", F_typeof, "X -> T"},
+	{"UNDEF", F_undef, "VAR -> [NIL|T]"},
+	{"XOR", F_xor, "(BOOL_1 ... BOOL_n) -> [NIL|T]"}};

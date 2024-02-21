@@ -18,9 +18,6 @@
 		memset(token_buffer, 0, token_buffer_max);	\
 		longjmp(jl,1);								\
 	} while (0)
-
-//		longjmp(jl, 1);                             
-
 FILE *input_file;
 static int lex_buf[4]; // 2 enough
 static int *lex_bufp;

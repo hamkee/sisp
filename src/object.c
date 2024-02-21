@@ -6,6 +6,7 @@
 #include <ctype.h>
 #include <fcntl.h>
 #include <signal.h>
+#include <pthread.h>
 
 #include "sisp.h"
 #include "extern.h"
@@ -237,8 +238,10 @@ void dump_object(int pool_number)
 			princ_object(stdout, p->value);
 			printf("\n");
 		}
-		for (i = 0; i <= 7; i++)
+		for (i = 0; i <= 7; i++) {
+			if(pool[i].used_size > 0)
 			printf("|%6zu %6zu|\n", pool[i].used_size, pool[i].free_size);
+	}
 	}
 	else if (pool_number >= 3 && pool_number <= 7)
 	{
@@ -252,10 +255,10 @@ void dump_object(int pool_number)
 	}
 	else
 	{
-		fprintf(stderr, "; NO SUCH POOL");
+		fprintf(stderr, "; NO SUCH POOL %d", pool_number);
 	}
 }
-
+/* GC WITHOUT THREADS 
 static void tag_tree(objectp p)
 {
 	if (p->gc == gc_id)
@@ -278,7 +281,52 @@ static void tag_whole_tree(void)
 		tag_tree(p->value);
 	}
 }
+*/
 
+/*
+__inline__ static
+void *tag_tree(void *tree)
+{
+	objectp *t_ptr = (objectp *)tree;
+	pthread_t tag_l,tag_r;
+	if((*t_ptr)->gc == gc_id)
+		return NULL;
+	(*t_ptr)->gc = gc_id;
+	if( (*t_ptr)->type == OBJ_CONS) {
+		pthread_create(&tag_l, NULL, tt, &((*t_ptr)->vcar));
+		pthread_create(&tag_r, NULL, tt, &((*t_ptr)->vcdr));
+		pthread_join(tag_l, NULL);
+		pthread_join(tag_r, NULL);
+	}
+}
+
+*/
+static
+void *tt(void *tree)
+{
+	objectp *t_ptr = (objectp *)tree;
+	if((*t_ptr)->gc == gc_id)
+		return NULL;
+	(*t_ptr)->gc = gc_id;
+	if((*t_ptr)->type == OBJ_CONS) {
+		tt(&((*t_ptr)->vcar));
+		tt(&((*t_ptr)->vcdr));
+	}
+	return NULL;
+}
+__inline__ static void
+tag_whole_tree(void)
+{
+	object_pairp p;
+	pthread_t tag_name, tag_value;
+	for (p = setobjs_list; p != NULL; p = p->next) {
+		pthread_create(&tag_name, NULL, tt, &(p->name));
+		pthread_create(&tag_value, NULL, tt, &(p->value));
+		pthread_join(tag_name, NULL);
+		pthread_join(tag_value, NULL);
+	}
+	return;
+}
 void garbage_collect(void)
 {
 	objectp p, prev, next;
@@ -300,9 +348,10 @@ void garbage_collect(void)
 			prev = p;
 			if (p->gc != gc_id && p != null)
 			{
-				if (prev == NULL)
-					pool[i].head.u = next;
-				else
+				// if (prev == NULL) {
+				// 	printf("not redundant\n");
+				// 	pool[i].head.u = next;
+				// } else
 					prev->next = next;
 				p->next = pool[i].head.f;
 				pool[i].head.f = p;
@@ -323,44 +372,4 @@ void garbage_collect(void)
 /*
 GARBAGE COLLECTOR WITH THREADS
 
-static
-void *tt(void *tree)
-{
-	objectp *t_ptr = (objectp *)tree;
-	if((*t_ptr)->gc == gc_id)
-		return NULL;
-	(*t_ptr)->gc = gc_id;
-	if((*t_ptr)->type == OBJ_CONS) {
-		tt(&((*t_ptr)->vcar));
-		tt(&((*t_ptr)->vcdr));
-	}
-}
-__inline__ static
-void *tag_tree(void *tree)
-{
-	objectp *t_ptr = (objectp *)tree;
-	pthread_t tag_l,tag_r;
-	if((*t_ptr)->gc == gc_id)
-		return NULL;
-	(*t_ptr)->gc = gc_id;
-	if( (*t_ptr)->type == OBJ_CONS) {
-		pthread_create(&tag_l, NULL, tt, &((*t_ptr)->vcar));
-		pthread_create(&tag_r, NULL, tt, &((*t_ptr)->vcdr));
-		pthread_join(tag_l, NULL);
-		pthread_join(tag_r, NULL);
-	}
-}
-__inline__ static void
-tag_whole_tree(void)
-{
-	object_pairp p;
-	pthread_t tag_name, tag_value;
-	for (p = setobjs_list; p != NULL; p = p->next) {
-		pthread_create(&tag_name, NULL, tt, &(p->name));
-		pthread_create(&tag_value, NULL, tt, &(p->value));
-		pthread_join(tag_name, NULL);
-		pthread_join(tag_value, NULL);
-	}
-
-}
 */

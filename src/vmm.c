@@ -17,7 +17,7 @@ void clean_pools(void)
 			pool[i].head.u = pool[i].head.u->next;
 			if (p->type == OBJ_IDENTIFIER)
 				free(p->value.id);
-			if (p->type == OBJ_STRING)
+			else if (p->type == OBJ_STRING)
 				free(p->value.s.str);
 			free(p);
 		}
@@ -50,6 +50,8 @@ void recycle_pool(a_type type)
 		pool[type].head.f = pool[type].head.f->next;
 		if (p->type == OBJ_IDENTIFIER)
 			free(p->value.id);
+		else if (p->type == OBJ_STRING)
+			free(p->value.s.str);
 		free(p);
 		pool[type].free_size--;
 	}

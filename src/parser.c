@@ -32,7 +32,7 @@ static int thistoken;
 __inline__ static objectp parse_form(void)
 {
 	objectp p, first, prev;
-	first = prev = NULL;
+	first = prev = (objectp) NULL;
 
 	while ((thistoken = gettoken()) != ')' && thistoken != EOF)
 	{
@@ -54,14 +54,14 @@ __inline__ static objectp parse_form(void)
 		p->value.c.car = parse_object(1);
 		prev = p;
 	}
-
-	return (first == NULL) ? null : first;
+	return first;
+//	return (first == NULL) ? null : first;
 }
 
 objectp
 parse_object(int havetoken)
 {
-	objectp p = NULL;
+	objectp p = (objectp) NULL;
 	long int d, n;
 	char *delim;
 
@@ -79,7 +79,7 @@ parse_object(int havetoken)
 	switch (thistoken)
 	{
 	case EOF:
-		return NULL;
+		return (objectp) NULL;
 	case '`':
 		PARSE_BACKQUOTE;
 		break;

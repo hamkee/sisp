@@ -37,7 +37,6 @@ process_file(void)
 	}
 	clean_buffers();
 }
-
 static void
 process_stdin(void)
 {
@@ -51,7 +50,16 @@ process_stdin(void)
 		p = (!setjmp(jb)) ? parse_object(0) : NULL;
 		done_lex();
 		if (p != NULL)
-			q = (!setjmp(je)) ? eval(p) : NULL;
+		{
+			if (!setjmp(je))
+			{
+q = eval(p);
+			}
+			else
+			{
+				q = NULL;
+			}
+		}
 		else
 			fprintf(stderr, "; PARSER ERROR.");
 		if (p != NULL && q != NULL)
@@ -59,6 +67,7 @@ process_stdin(void)
 		puts("");
 		garbage_collect();
 	}
+
 	free(token_buffer);
 }
 

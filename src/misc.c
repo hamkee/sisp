@@ -7,7 +7,7 @@
 #include "eval.h"
 #include "extern.h"
 
-void princ_object(FILE *fout, objectp p)
+void princ_object(FILE *fout, const struct object *p)
 {
 	switch (p->type)
 	{

@@ -13,7 +13,7 @@ INSTALL_DATA = ${INSTALL} -m 644
 INSTALL = /usr/bin/install -c
 
 CC = cc
-CFLAGS = -Wall -pedantic
+CFLAGS = -g -Wall -pedantic
 LDFLAGS = -lpthread -lm
 LIBS =   
 
@@ -24,7 +24,7 @@ PROG = sisp
 OBJS = main.o vmm.o lexer.o libsisp.o parser.o funcs.o object.o misc.o eval.o 
 
 .c.o:
-	$(CC) -c -fcommon -I$(srcdir) $(CFLAGS) $<
+	$(CC) -c -g -fcommon -I$(srcdir) $(CFLAGS) $<
 
 all: $(PROG)
 

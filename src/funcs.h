@@ -2,7 +2,7 @@
 #define _FUNCS_H
 
 extern objectp F_progn(const struct object *);
-#define FUNCS_N 50
+#define FUNCS_N 51
 funcs functions[FUNCS_N];
 
 #endif

@@ -63,6 +63,7 @@ typedef struct
 {
   char *name;
   objectp (*func)(const struct object *);
+  char doc[64];
 } funcs;
 
 #define vcar value.c.car
