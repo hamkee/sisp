@@ -21,7 +21,7 @@ LEX = @LEX@
 YACC = @YACC@
 
 PROG = sisp
-OBJS = main.o vmm.o lexer.o libsisp.o parser.o funcs.o object.o misc.o eval.o 
+OBJS = process.o main.o  vmm.o lexer.o libsisp.o parser.o funcs.o object.o misc.o eval.o 
 
 .c.o:
 	$(CC) -c -g -fcommon -I$(srcdir) $(CFLAGS) $<

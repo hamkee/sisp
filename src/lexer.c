@@ -19,7 +19,7 @@
 		longjmp(jl,1);								\
 	} while (0)
 FILE *input_file;
-static int lex_buf[4]; // 2 enough
+static int lex_buf[2];
 static int *lex_bufp;
 char *token_buffer;
 static int token_buffer_max;

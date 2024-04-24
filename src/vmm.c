@@ -69,7 +69,7 @@ void feed_pool(a_type type)
 		units = 255;
 	else
 		units = 15;
-	pool[type].free_size = units + 1;
+
 	pool[type].head.f = malloc(OBJ_SIZE);
 	if (pool[type].head.f == NULL)
 	{
@@ -87,7 +87,10 @@ void feed_pool(a_type type)
 			return;
 		}
 		pool[type].head.f = pool[type].head.f->next;
+		pool[type].free_size++;
 	}
+	pool[type].free_size++;
+
 	pool[type].head.f->next = NULL;
 	pool[type].head.f = new_heap_list;
 }

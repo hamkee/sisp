@@ -6,33 +6,12 @@
 #include "sisp.h"
 #include "extern.h"
 
-#define PARSE_COMMA                              \
-	p = new_object(OBJ_CONS);                    \
-	p->value.c.car = new_object(OBJ_IDENTIFIER); \
-	p->value.c.car->value.id = strdup("COMMA");  \
-	p->value.c.cdr = new_object(OBJ_CONS);       \
-	p->value.c.cdr->value.c.car = parse_object(0)
-
-#define PARSE_QUOTE                              \
-	p = new_object(OBJ_CONS);                    \
-	p->value.c.car = new_object(OBJ_IDENTIFIER); \
-	p->value.c.car->value.id = strdup("QUOTE");  \
-	p->value.c.cdr = new_object(OBJ_CONS);       \
-	p->value.c.cdr->value.c.car = parse_object(0)
-
-#define PARSE_BACKQUOTE                          \
-	p = new_object(OBJ_CONS);                    \
-	p->value.c.car = new_object(OBJ_IDENTIFIER); \
-	p->value.c.car->value.id = strdup("BQUOTE"); \
-	p->value.c.cdr = new_object(OBJ_CONS);       \
-	p->value.c.cdr->value.c.car = parse_object(0)
-
 static int thistoken;
 
 __inline__ static objectp parse_form(void)
 {
 	objectp p, first, prev;
-	first = prev = (objectp) NULL;
+	first = prev = (objectp)NULL;
 
 	while ((thistoken = gettoken()) != ')' && thistoken != EOF)
 	{
@@ -55,13 +34,13 @@ __inline__ static objectp parse_form(void)
 		prev = p;
 	}
 	return first;
-//	return (first == NULL) ? null : first;
+	//	return (first == NULL) ? null : first;
 }
 
 objectp
 parse_object(int havetoken)
 {
-	objectp p = (objectp) NULL;
+	objectp p = (objectp)NULL;
 	long int d, n;
 	char *delim;
 
@@ -79,18 +58,30 @@ parse_object(int havetoken)
 	switch (thistoken)
 	{
 	case EOF:
-		return (objectp) NULL;
+		return (objectp)NULL;
 	case '`':
-		PARSE_BACKQUOTE;
+		p = new_object(OBJ_CONS);
+		p->value.c.car = new_object(OBJ_IDENTIFIER);
+		p->value.c.car->value.id = strdup("BQUOTE");
+		p->value.c.cdr = new_object(OBJ_CONS);
+		p->value.c.cdr->value.c.car = parse_object(0);
 		break;
 	case ',':
-		PARSE_COMMA;
+		p = new_object(OBJ_CONS);
+		p->value.c.car = new_object(OBJ_IDENTIFIER);
+		p->value.c.car->value.id = strdup("COMMA");
+		p->value.c.cdr = new_object(OBJ_CONS);
+		p->value.c.cdr->value.c.car = parse_object(0);
 		break;
 	case '(':
 		p = parse_form();
 		break;
 	case '\'':
-		PARSE_QUOTE;
+		p = new_object(OBJ_CONS);
+		p->value.c.car = new_object(OBJ_IDENTIFIER);
+		p->value.c.car->value.id = strdup("QUOTE");
+		p->value.c.cdr = new_object(OBJ_CONS);
+		p->value.c.cdr->value.c.car = parse_object(0);
 		break;
 	case IDENTIFIER:
 		if (!strcmp(token_buffer, "T"))
@@ -103,8 +94,9 @@ parse_object(int havetoken)
 			p->value.id = strdup(token_buffer);
 		}
 		break;
-		case STRING:
-		if ((p = search_object_string(token_buffer)) == NULL) {
+	case STRING:
+		if ((p = search_object_string(token_buffer)) == NULL)
+		{
 			p = new_object(OBJ_STRING);
 			p->value.s.str = strdup(token_buffer);
 			p->value.s.len = strlen(p->value.s.str);
