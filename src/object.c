@@ -131,7 +131,6 @@ void remove_object(objectp name)
 	{
 		next = p->next;
 		if (name->type == OBJ_IDENTIFIER &&
-			p->name->type == OBJ_IDENTIFIER &&
 			!strcmp(name->value.id, p->name->value.id))
 		{
 			if (prev == NULL)
@@ -153,11 +152,14 @@ void set_object(objectp name, objectp value)
 		fprintf(stderr, "; SET OBJECT: NULL VALUE.");
 		longjmp(je, 1);
 	}
+	if(name->type != OBJ_IDENTIFIER) {
+		fprintf(stderr, "; SET OBJECT: NOT IDENTIFIER NAME.");
+		longjmp(je,1);
+	}
 	for (p = setobjs_list; p != NULL; p = next)
 	{
 		next = p->next;
 		if (name->type == OBJ_IDENTIFIER &&
-			p->name->type == OBJ_IDENTIFIER &&
 			!strcmp(name->value.id, p->name->value.id))
 		{
 			p->value = value;
@@ -184,8 +186,7 @@ try_object(const struct object *name)
 	if (name == null)
 		return null;
 	for (p = setobjs_list; p != NULL; p = p->next)
-		if (p->name->type == OBJ_IDENTIFIER &&
-			!strcmp(name->value.id, p->name->value.id))
+		if (!strcmp(name->value.id, p->name->value.id))
 			return p->value;
 	return null;
 }
@@ -198,10 +199,11 @@ get_object(const struct object *name)
 		fprintf(stderr, "; GET OBJECT: NULL NAME.");
 		longjmp(je, 1);
 	}
-	for (p = setobjs_list; p != NULL; p = p->next)
-		if (p->name->type == OBJ_IDENTIFIER &&
-			!strcmp(name->value.id, p->name->value.id))
+	for (p = setobjs_list; p != NULL; p = p->next) {
+		if (!strcmp(name->value.id, p->name->value.id)) {
 			return p->value;
+			}
+	}
 
 		fprintf(stderr, "; OBJECT '%s' NOT FOUND.", name->value.id);
 		longjmp(je, 1);
