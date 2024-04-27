@@ -27,6 +27,7 @@ int main(int argc, char **argv)
 	}
 	else
 		fprintf(stderr, "cannot load functions\n");
+		//process_input("tests/test1.lsp");
 	if (argc > 1)
 		while (*++argv)
 			process_input(*argv);

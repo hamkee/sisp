@@ -33,8 +33,8 @@ __inline__ static objectp parse_form(void)
 		p->value.c.car = parse_object(1);
 		prev = p;
 	}
-	return first;
-	//	return (first == NULL) ? null : first;
+	// this is for '()
+		return (first == NULL) ? null : first;
 }
 
 objectp

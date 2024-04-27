@@ -38,6 +38,7 @@ process_file(void)
 	}
 	clean_buffers();
 }
+
 static void
 process_stdin(void)
 {

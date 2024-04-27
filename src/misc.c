@@ -36,6 +36,7 @@ void princ_object(FILE *fout, const struct object *p)
 		break;
 	case OBJ_CONS:
 		fputc('(', fout);
+
 		do
 		{
 			princ_object(fout, p->vcar);

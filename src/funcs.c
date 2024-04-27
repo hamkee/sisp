@@ -331,6 +331,9 @@ objectp
 F_consp(const struct object *args)
 {
 	objectp p;
+	p = car(args);
+	if (p->type != OBJ_CONS)
+		return nil;
 	p = eval(car(args));
 	if (p->vcar->type == OBJ_CONS && cdr(p->vcar)->type != OBJ_CONS && cdr(p->vcar) != nil)
 		return t;
@@ -450,6 +453,7 @@ F_cons(const struct object *args)
 {
 	objectp p;
 	p = new_object(OBJ_CONS);
+
 	p->vcar = eval(car(args));
 	p->vcdr = eval(cadr(args));
 	return p; // args;
@@ -1113,13 +1117,17 @@ F_help(const struct object *args)
 	objectp arg1;
 	funcs key, *item;
 	int i = 0;
-	if(args == nil) {
-		for(i=0;i<FUNCS_N;i++) {
+	if (args == nil)
+	{
+		for (i = 0; i < FUNCS_N; i++)
+		{
 			printf("%s:%s\n", functions[i].name, functions[i].doc);
 		}
 		return t;
 	}
 	arg1 = car(args);
+	if (arg1->type != OBJ_IDENTIFIER)
+		return nil;
 	key.name = arg1->value.id;
 	key.func = NULL;
 	if ((item = bsearch(&key, functions,
@@ -1131,7 +1139,22 @@ F_help(const struct object *args)
 	}
 	return nil;
 }
+objectp
+F_mod(const struct object *args)
+{
+	objectp d, n, r;
 
+	n = eval(car(args));
+	d = eval(car(cdr(args)));
+
+	_ASSERTP(n->type == OBJ_INTEGER, NOT INTEGER, MOD, n);
+	_ASSERTP(d->type == OBJ_INTEGER, NOT INTEGER, MOD, d);
+	_ASSERTP(d->value.i != 0, DIVISION BY ZERO, MOD, d);
+
+	r = new_object(OBJ_INTEGER);
+	r->value.i = n->value.i % d->value.i;
+	return r;
+}
 funcs functions[FUNCS_N] = {
 	{"*", F_prod, "(NUM_1 ... NUM_k) -> NUM"},
 	{"+", F_add, "(NUM_1 ... NUM_k) -> NUM"},
@@ -1167,6 +1190,7 @@ funcs functions[FUNCS_N] = {
 	{"LOAD", F_loadfile, "IDENTIFIER"},
 	{"MAP", F_map, "(FUNCTION LIST) -> LIST"},
 	{"MEMBERP", F_member, "(X_1 LIST) -> [NIL|T]"},
+	{"MOD", F_mod, "INT_1 INT_2 -> INT"},
 	{"NOT", F_not, "BOOL -> BOOL"},
 	{"OR", F_or, "(BOOL_1 ... BOOL_n) -> [NIL|T]"},
 	{"ORD", F_ord, "LIST -> NUM"},

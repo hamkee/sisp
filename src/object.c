@@ -138,10 +138,6 @@ void remove_object(objectp name)
 				setobjs_list = next;
 			else
 				prev->next = next;
-			// may be used
-			// if (p->value->type == OBJ_IDENTIFIER) {
-			// 	free(p->value->value.id);
-			// 	}
 			free(p);
 			break;
 		}
