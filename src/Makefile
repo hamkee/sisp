@@ -24,12 +24,12 @@ PROG = sisp
 OBJS = process.o main.o  vmm.o lexer.o libsisp.o parser.o funcs.o object.o misc.o eval.o 
 
 .c.o:
-	$(CC) -c -g -fcommon -I$(srcdir) $(CFLAGS) $<
+	$(CC) -c -g -fcommon -DGCTHREADS -I$(srcdir) $(CFLAGS) $<
 
 all: $(PROG)
 
 $(PROG): $(OBJS)
-	$(CC) $(LDFLAGS) -o $(PROG) $(OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -DGCTHREADS -o $(PROG) $(OBJS) $(LIBS)
 
 .PHONY: install uninstall clean realclean distclean mostlyclean
 

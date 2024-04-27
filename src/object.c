@@ -256,52 +256,11 @@ void dump_object(int pool_number)
 		fprintf(stderr, "; NO SUCH POOL %d", pool_number);
 	}
 }
-/* GC WITHOUT THREADS 
-static void tag_tree(objectp p)
-{
-	if (p->gc == gc_id)
-		return;
-	p->gc = gc_id;
-	if (p->type == OBJ_CONS)
-	{
-		tag_tree(p->vcar);
-		tag_tree(p->vcdr);
-	}
-}
-
-static void tag_whole_tree(void)
-{
-	object_pairp p;
-
-	for (p = setobjs_list; p != NULL; p = p->next)
-	{
-		tag_tree(p->name);
-		tag_tree(p->value);
-	}
-}
-*/
-
-/*
-__inline__ static
-void *tag_tree(void *tree)
-{
-	objectp *t_ptr = (objectp *)tree;
-	pthread_t tag_l,tag_r;
-	if((*t_ptr)->gc == gc_id)
-		return NULL;
-	(*t_ptr)->gc = gc_id;
-	if( (*t_ptr)->type == OBJ_CONS) {
-		pthread_create(&tag_l, NULL, tt, &((*t_ptr)->vcar));
-		pthread_create(&tag_r, NULL, tt, &((*t_ptr)->vcdr));
-		pthread_join(tag_l, NULL);
-		pthread_join(tag_r, NULL);
-	}
-}
-
-*/
+#ifdef GCTHREADS
 static
 void *tt(void *tree)
 {
+	printf("threads\n");
 	objectp *t_ptr = (objectp *)tree;
 	if((*t_ptr)->gc == gc_id)
 		return NULL;
@@ -325,6 +284,33 @@ tag_whole_tree(void)
 	}
 	return;
 }
+#else
+static void tag_tree(objectp p)
+{
+		printf("no threads\n");
+
+	if (p->gc == gc_id)
+		return;
+	p->gc = gc_id;
+	if (p->type == OBJ_CONS)
+	{
+		tag_tree(p->vcar);
+		tag_tree(p->vcdr);
+	}
+}
+
+static void tag_whole_tree(void)
+{
+	object_pairp p;
+
+	for (p = setobjs_list; p != NULL; p = p->next)
+	{
+		tag_tree(p->name);
+		tag_tree(p->value);
+	}
+}
+
+#endif
 void garbage_collect(void)
 {
 	objectp p, prev, next;
