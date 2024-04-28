@@ -7,7 +7,7 @@
 #include "sisp.h"
 #include "extern.h"
 
-#define TOKEN_BUFFER 16
+#define TOKEN_BUFFER 64
 #define XGETC() ((lex_bufp > lex_buf) ? *--lex_bufp : toupper(fgetc(input_file)))
 #define XUNGETC(c) *lex_bufp++ = c
 #define CLEAN_BUFFER                                \
