@@ -26,9 +26,10 @@ handsig(const char *str)
 objectp
 eval_rat(const struct object *args)
 {
+	objectp result;
 	long int n, d, g;
 	short sign = 0;
-	objectp result;
+
 	n = args->value.r.n;
 	d = args->value.r.d;
 	_ASSERTP(d != 0L, DIVISION BY ZERO, EVAL, null);
@@ -68,8 +69,9 @@ eval_func(objectp p, objectp args)
 {
 	objectp head_args, b, q, M, bind_list;
 	q = head_args = b = NULL;
-
+	
 	bind_list = cadr(p);
+
 	if (bind_list == nil)
 	{
 		if (!setjmp(je))

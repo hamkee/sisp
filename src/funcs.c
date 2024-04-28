@@ -331,13 +331,13 @@ objectp
 F_consp(const struct object *args)
 {
 	objectp p;
-	p = car(args);
-	if (p->type != OBJ_CONS)
-		return nil;
 	p = eval(car(args));
-	if (p->vcar->type == OBJ_CONS && cdr(p->vcar)->type != OBJ_CONS && cdr(p->vcar) != nil)
-		return t;
-	return nil;
+	if(p->type != OBJ_CONS)
+		return nil;
+
+	if(p->vcar->type == OBJ_CONS || p->vcdr->type == OBJ_CONS)
+		return nil;
+	return t;
 }
 objectp
 F_loadfile(const struct object *args)
@@ -1115,8 +1115,9 @@ objectp
 F_help(const struct object *args)
 {
 	objectp arg1;
-	funcs key, *item;
-	int i = 0;
+	funcs key;
+	const funcs *item;
+	int i;
 	if (args == nil)
 	{
 		for (i = 0; i < FUNCS_N; i++)

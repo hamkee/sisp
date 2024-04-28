@@ -26,7 +26,7 @@ void princ_object(FILE *fout, const struct object *p)
 			fprintf(fout, "\"%s\"", p->value.s.str);
 		break;
 	case OBJ_NULL:
-		fputs("", fout);
+		fputc('\0', fout);
 		break;
 	case OBJ_INTEGER:
 		fprintf(fout, "%li", p->value.i);
@@ -36,7 +36,6 @@ void princ_object(FILE *fout, const struct object *p)
 		break;
 	case OBJ_CONS:
 		fputc('(', fout);
-
 		do
 		{
 			princ_object(fout, p->vcar);
@@ -95,18 +94,18 @@ eqcons(objectp a, objectp b)
 long int
 gcd(long int a, long int b)
 {
-	long int t;
+	long int tmp;
 	if (a < b)
 	{
-		t = a;
+		tmp = a;
 		a = b;
-		b = t;
+		b = tmp;
 	}
 	while (b != 0L)
 	{
-		t = a % b;
+		tmp = a % b;
 		a = b;
-		b = t;
+		b = tmp;
 	}
 	return a;
 }
