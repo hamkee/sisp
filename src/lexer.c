@@ -42,16 +42,6 @@ void init_lex(void)
 
 void done_lex(void)
 {
-	void *tmp_buffer;
-	tmp_buffer = (char *)realloc(token_buffer, TOKEN_BUFFER);
-	if (tmp_buffer == NULL)
-	{
-		free(token_buffer);
-		fprintf(stderr, "memory reallocation error\n");
-		return;
-	}
-	token_buffer = (char *)tmp_buffer;
-
 	memset(token_buffer, 0, TOKEN_BUFFER);
 }
 
