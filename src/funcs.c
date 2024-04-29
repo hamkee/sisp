@@ -14,7 +14,11 @@
 #include "eval.h"
 #include "misc.h"
 
-#define ISNUMERIC(x) ((x)->type == OBJ_INTEGER || (x)->type == OBJ_RATIONAL) ? true : false
+#define ISNUMERIC(x) (                                                          \
+						 (x)->type == OBJ_INTEGER || (x)->type == OBJ_RATIONAL) \
+						 ? true                                                 \
+						 : false
+
 #define CONSP(p) (              \
 	p->type == OBJ_CONS &&      \
 	cdr(p)->type != OBJ_CONS && \
@@ -89,7 +93,32 @@ F_less(const struct object *args)
 	}
 	return null;
 }
-
+static objectp
+F_seq(const struct object *args)
+{
+	objectp arg1, arg2;
+	objectp first = NULL, prev = NULL, p1;
+	int i;
+	arg1 = eval(car(args));
+	arg2 = eval(cadr(args));
+	_ASSERTP(arg1->type == OBJ_INTEGER, NOT INTEGER, SEQ, arg1);
+	_ASSERTP(arg2->type == OBJ_INTEGER, NOT INTEGER, SEQ, arg2);
+	_ASSERTP(arg1->value.i < arg2->value.i, INVALID BOUNDS, SEQ, args);
+	i = arg1->value.i;
+	do
+	{
+		p1 = new_object(OBJ_CONS);
+		p1->vcar = new_object(OBJ_INTEGER);
+		p1->vcar->value.i = i;
+		i++;
+		if (first == NULL)
+			first = p1;
+		if (prev != NULL)
+			prev->vcdr = p1;
+		prev = p1;
+	} while (i <= arg2->value.i);
+	return first;
+}
 static objectp
 F_lesseq(const struct object *args)
 {
@@ -332,10 +361,10 @@ F_consp(const struct object *args)
 {
 	objectp p;
 	p = eval(car(args));
-	if(p->type != OBJ_CONS)
+	if (p->type != OBJ_CONS)
 		return nil;
 
-	if(p->vcar->type == OBJ_CONS || p->vcdr->type == OBJ_CONS)
+	if (p->vcar->type == OBJ_CONS || p->vcdr->type == OBJ_CONS)
 		return nil;
 	return t;
 }
@@ -1156,6 +1185,112 @@ F_mod(const struct object *args)
 	r->value.i = n->value.i % d->value.i;
 	return r;
 }
+objectp
+F_cap(const struct object *args)
+{
+	objectp arg1, arg2, tmp, c;
+	objectp first = NULL, prev = NULL, p1;
+
+	arg1 = eval(car(args));
+	arg2 = eval(cadr(args));
+
+	_ASSERTP(arg1->type == OBJ_CONS, NOT CONS, CAP, arg1);
+	_ASSERTP(arg2->type == OBJ_CONS, NOT CONS, CAP, arg2);
+	do
+	{
+		tmp = arg2;
+		do
+		{
+			if (arg1->vcar->type == tmp->vcar->type)
+			{
+				switch (arg1->vcar->type)
+				{
+				case OBJ_INTEGER:
+					if (arg1->vcar->value.i == tmp->vcar->value.i)
+					{
+						p1 = new_object(OBJ_CONS);
+						p1->vcar = new_object(OBJ_INTEGER);
+						p1->vcar->value.i = arg1->vcar->value.i;
+						if (first == NULL)
+							first = p1;
+						if (prev != NULL)
+							prev->vcdr = p1;
+						prev = p1;
+					}
+					break;
+				case OBJ_RATIONAL:
+					if (arg1->vcar->value.r.n == tmp->vcar->value.r.n &&
+						arg1->vcar->value.r.d == tmp->vcar->value.r.d)
+					{
+						p1 = new_object(OBJ_CONS);
+						p1->vcar = new_object(OBJ_RATIONAL);
+						p1->vcar->value.r.n = arg1->vcar->value.r.n;
+						p1->vcar->value.r.d = arg1->vcar->value.r.d;
+						if (first == NULL)
+							first = p1;
+						if (prev != NULL)
+							prev->vcdr = p1;
+						prev = p1;
+					}
+					break;
+				case OBJ_T:
+				case OBJ_NIL:
+					p1 = new_object(OBJ_CONS);
+					p1->vcar = arg1->vcar;
+					if (first == NULL)
+						first = p1;
+					if (prev != NULL)
+						prev->vcdr = p1;
+					prev = p1;
+					break;
+				case OBJ_IDENTIFIER:
+					if (strcmp(arg1->vcar->value.id, tmp->vcar->value.id) == 0)
+					{
+						p1 = new_object(OBJ_CONS);
+						p1->vcar = new_object(OBJ_IDENTIFIER);
+						p1->vcar->value.id = strdup(arg1->vcar->value.id);
+						if (first == NULL)
+							first = p1;
+						if (prev != NULL)
+							prev->vcdr = p1;
+						prev = p1;
+					}
+					break;
+				case OBJ_STRING:
+					if (strcmp(arg1->vcar->value.s.str, tmp->vcar->value.s.str) == 0)
+					{
+						p1 = new_object(OBJ_CONS);
+						p1->vcar = new_object(OBJ_STRING);
+						p1->vcar->value.s.str = strdup(arg1->vcar->value.s.str);
+						if (first == NULL)
+							first = p1;
+						if (prev != NULL)
+							prev->vcdr = p1;
+						prev = p1;
+					}
+					break;
+				case OBJ_CONS:
+					c = eqcons(arg1->vcar, tmp->vcar);
+					if (c == t)
+					{
+						p1 = new_object(OBJ_CONS);
+						p1->vcar = arg1->vcar;
+						if (first == NULL)
+							first = p1;
+						if (prev != NULL)
+							prev->vcdr = p1;
+						prev = p1;
+					}
+					break;
+				default:
+					break;
+				}
+			}
+		} while ((tmp = cdr(tmp)) != nil);
+	} while ((arg1 = cdr(arg1)) != nil);
+
+	return first;
+}
 funcs functions[FUNCS_N] = {
 	{"*", F_prod, "(NUM_1 ... NUM_k) -> NUM"},
 	{"+", F_add, "(NUM_1 ... NUM_k) -> NUM"},
@@ -1170,6 +1305,7 @@ funcs functions[FUNCS_N] = {
 	{"ASSOC", F_assoc, "(<= X_1 X_2)"},
 	{"ATOMP", F_atom, "X -> [NIL|T]"},
 	{"BQUOTE", F_bquote, "EXPR -> EXPR"},
+	{"CAP", F_cap, "LIST_1 LIST_2 -> LIST"},
 	{"CAR", F_car, "LIST -> LIST"},
 	{"CAT", F_cat, "(STRING_1 STRING_2) -> STRING"},
 	{"CDR", F_cdr, "LIST -> LIST"},
@@ -1203,6 +1339,7 @@ funcs functions[FUNCS_N] = {
 	{"PUSH", F_push, "(X STACK) -> STACK"},
 	{"QUIT", F_quit, ""},
 	{"QUOTE", F_quote, "X -> IDENTIFIER"},
+	{"SEQ", F_seq, "INT_1 INT_2 -> LIST"},
 	{"STRLEN", F_strlen, "STRING -> NUM"},
 	{"SUBST", F_subst, "(<= X_1 X_2)"},
 	{"SUBSTR", F_substr, "(NUM_1 NUM_2 STRING) -> STRING"},

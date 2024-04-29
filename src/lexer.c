@@ -7,7 +7,7 @@
 #include "sisp.h"
 #include "extern.h"
 
-#define TOKEN_BUFFER 64
+#define BUFFER_SIZE 64
 #define XGETC() ((lex_bufp > lex_buf) ? *--lex_bufp : toupper(fgetc(input_file)))
 #define XUNGETC(c) *lex_bufp++ = c
 #define CLEAN_BUFFER                                \
@@ -16,7 +16,7 @@
 		XUNGETC(c);                                 \
 		while (((c = XGETC()) == '\n') && c != EOF) \
 			;                                       \
-		memset(token_buffer, 0, TOKEN_BUFFER);      \
+		memset(token_buffer, 0, BUFFER_SIZE);      \
 		longjmp(jl, 1);                             \
 	} while (0)
 
@@ -29,27 +29,28 @@ jmp_buf jl;
 
 void init_lex(void)
 {
-	token_buffer = (char *)malloc(TOKEN_BUFFER);
+	token_buffer = (char *)malloc(BUFFER_SIZE);
 	if (token_buffer == NULL)
 	{
 		fprintf(stderr, "allocating memory\n");
 		return;
 	}
-	memset(token_buffer, 0, TOKEN_BUFFER);
+	memset(token_buffer, 0, BUFFER_SIZE);
 
 	lex_bufp = lex_buf;
 }
 
 void done_lex(void)
 {
-	memset(token_buffer, 0, TOKEN_BUFFER);
+	memset(token_buffer, 0, BUFFER_SIZE);
 }
 
 int gettoken(void)
 {
 	char *p;
 	int c;
-
+	size_t string_buffer;
+	size_t offset;
 	while (true)
 	{
 		c = XGETC();
@@ -103,9 +104,9 @@ int gettoken(void)
 			p = token_buffer;
 			do
 			{
-				if (p - token_buffer == TOKEN_BUFFER)
+				if (p - token_buffer == BUFFER_SIZE)
 				{
-					fprintf(stderr, "; TOKEN LENGTH > %d\n", TOKEN_BUFFER);
+					fprintf(stderr, "; TOKEN LENGTH > %d\n", BUFFER_SIZE);
 					CLEAN_BUFFER;
 				}
 				*p++ = c;
@@ -119,9 +120,9 @@ int gettoken(void)
 			}
 			else if (c == '/')
 			{
-				if (p - token_buffer == TOKEN_BUFFER)
+				if (p - token_buffer == BUFFER_SIZE)
 				{
-					fprintf(stderr, "; TOKEN LENGTH > %d\n", TOKEN_BUFFER);
+					fprintf(stderr, "; TOKEN LENGTH > %d\n", BUFFER_SIZE);
 					CLEAN_BUFFER;
 				}
 				*p++ = c;
@@ -132,9 +133,9 @@ int gettoken(void)
 				}
 				do
 				{
-					if (p - token_buffer == TOKEN_BUFFER)
+					if (p - token_buffer == BUFFER_SIZE)
 					{
-						fprintf(stderr, "; TOKEN LENGTH > %d\n", TOKEN_BUFFER);
+						fprintf(stderr, "; TOKEN LENGTH > %d\n", BUFFER_SIZE);
 						CLEAN_BUFFER;
 					}
 					*p++ = c;
@@ -152,17 +153,19 @@ int gettoken(void)
 		case '"':
 			c = XGETC();
 			p = token_buffer;
+			string_buffer = BUFFER_SIZE;
 			do
 			{
-				if (p - token_buffer == TOKEN_BUFFER)
+				if (p - token_buffer >= string_buffer)
 				{
-					fprintf(stderr, "; TOKEN LENGTH > %d\n", TOKEN_BUFFER);
-					CLEAN_BUFFER;
+					string_buffer += BUFFER_SIZE;
+					token_buffer = (char *)realloc(token_buffer, string_buffer);
+					offset = p - token_buffer;
+					p = token_buffer + offset;
 				}
 				*p++ = c;
 				c = XGETC();
 			} while (c != '"');
-			//			*p++ = c;
 			*p++ = '\0';
 			return STRING;
 		case '*': case '+': case '/': case '<': case '=': case '>': 
@@ -174,9 +177,9 @@ int gettoken(void)
 			p = token_buffer;
 			do
 			{
-				if (p - token_buffer == TOKEN_BUFFER)
+				if (p - token_buffer == BUFFER_SIZE)
 				{
-					fprintf(stderr, "; TOKEN LENGTH > %d\n", TOKEN_BUFFER);
+					fprintf(stderr, "; TOKEN LENGTH > %d\n", BUFFER_SIZE);
 					CLEAN_BUFFER;
 				}
 				*p++ = c;
