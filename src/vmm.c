@@ -37,11 +37,11 @@ void recycle_pool(a_type type)
 	objectp p;
 
 	if (type == OBJ_IDENTIFIER)
-		chunk_size = 64;
+		chunk_size = 32;
 	else if (type == OBJ_CONS)
 		chunk_size = 128;
 	else
-		chunk_size = 32;
+		chunk_size = 16;
 	if (pool[type].head.f == NULL)
 		return;
 	while (pool[type].free_size > chunk_size)
@@ -64,11 +64,11 @@ void feed_pool(a_type type)
 	objectp new_heap_list;
 
 	if (type == OBJ_IDENTIFIER)
-		units = 31;
-	else if (type == OBJ_CONS)
-		units = 255;
-	else
 		units = 15;
+	else if (type == OBJ_CONS)
+		units = 127;
+	else
+		units = 7;
 
 	pool[type].head.f = malloc(OBJ_SIZE);
 	if (pool[type].head.f == NULL)

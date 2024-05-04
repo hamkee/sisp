@@ -79,7 +79,6 @@ void process_input(const char *filename)
 	if (input_file != stdin)
 	{
 		process_file();
-		clean_buffers();
 	}
 	else
 		process_stdin();

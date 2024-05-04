@@ -14,13 +14,13 @@
 #include "eval.h"
 #include "misc.h"
 
-#define ISNUMERIC(x) (                                                          \
-						 (x)->type == OBJ_INTEGER || (x)->type == OBJ_RATIONAL) \
-						 ? true                                                 \
-						 : false
+#define ISNUMERIC(x) (                                             \
+			(x)->type == OBJ_INTEGER || (x)->type == OBJ_RATIONAL) \
+				? true                                             \
+				: false
 
 #define CONSP(p) (              \
-	p->type == OBJ_CONS &&      \
+	(p)->type == OBJ_CONS &&      \
 	cdr(p)->type != OBJ_CONS && \
 	cdr(p) != nil)
 
@@ -52,6 +52,7 @@ F_strlen(const struct object *args)
 	result->value.i = arg1->value.s.len;
 	return result;
 }
+
 static objectp
 F_cat(const struct object *args)
 {
@@ -77,6 +78,7 @@ F_cat(const struct object *args)
 	result->value.s.len = arg1->value.s.len + arg2->value.s.len;
 	return result;
 }
+
 static objectp
 F_pow(const struct object *args)
 {
@@ -85,18 +87,20 @@ F_pow(const struct object *args)
 	arg2 = eval(cadr(args));
 	_ASSERTP(ISNUMERIC(arg1), NOT NUMERIC, ^, arg1);
 	_ASSERTP(arg2->type == OBJ_INTEGER, NOT INTEGER, ^, arg2);
-	r = new_object(arg1->type);
 	if (arg1->type == OBJ_INTEGER)
 	{
+		r = new_object(OBJ_INTEGER);
 		r->value.i = (long int)pow((double)arg1->value.i, (double)arg2->value.i);
 	}
 	else
 	{
+		r = new_object(OBJ_RATIONAL);
 		r->value.r.n = (long int)pow((double)arg1->value.r.n, (double)arg2->value.i);
 		r->value.r.d = (long int)pow((double)arg1->value.r.d, (double)arg2->value.i);
 	}
 	return r;
 }
+
 static objectp
 F_less(const struct object *args)
 {
@@ -1044,26 +1048,6 @@ F_defmacro(const struct object *args)
 }
 
 objectp
-F_evlis(const struct object *args)
-{
-	objectp p, first, prev, arg1;
-	first = prev = NULL;
-	arg1 = eval(car(args));
-	_ASSERTP(arg1->type == OBJ_CONS, NOT CONS, EVLIS, arg1);
-	do
-	{
-		p = new_object(OBJ_CONS);
-		p->vcar = eval(car(arg1));
-		if (first == NULL)
-			first = p;
-		if (prev != NULL)
-			prev->vcdr = p;
-		prev = p;
-	} while ((arg1 = cdr(arg1)) != nil);
-	return first;
-}
-
-objectp
 F_pop(const struct object *stack)
 {
 	objectp p, q, r;
@@ -1207,6 +1191,7 @@ F_mod(const struct object *args)
 	r->value.i = n->value.i % d->value.i;
 	return r;
 }
+
 objectp
 F_cap(const struct object *args)
 {
@@ -1313,12 +1298,14 @@ F_cap(const struct object *args)
 
 	return first;
 }
+
 objectp
 F_print(const struct object *arg)
 {
 	princ_object(stdout, eval(car(arg)));
 	return null;
 }
+
 funcs functions[FUNCS_N] = {
 	{"*", F_prod, "(NUM_1 ... NUM_k) -> NUM"},
 	{"+", F_add, "(NUM_1 ... NUM_k) -> NUM"},
@@ -1346,7 +1333,6 @@ funcs functions[FUNCS_N] = {
 	{"DUMP", F_dump, "?POOL -> T"},
 	{"EQ", F_eq, "(X_1 X_2) -> [NIL|T]"},
 	{"EVAL", F_eval, "(<= X_1 X_2)"},
-	{"EVLIS", F_evlis, "(<= X_1 X_2)"},
 	{"HELP", F_help, "FUNC -> [NIL|T]"},
 	{"IF", F_if, "(COND EXPR_T EXPR_NIL) -> EXPR"},
 	{"LABELS", F_labels, "((FUN_1) ... (FUN_m)) EXPR_1 .. EXPR_k) -> EXPR_k"},
@@ -1361,7 +1347,7 @@ funcs functions[FUNCS_N] = {
 	{"ORD", F_ord, "LIST -> NUM"},
 	{"PAIR", F_pair, "(LIST_1 LIST_2) -> LIST"},
 	{"POP", F_pop, "STACK -> X"},
-	{"PRINT", F_print, "OBJECT"},
+	{"PRINT", F_print, "OBJECT -> NULL"},
 	{"PROG1", F_prog1, "(<= X_1 X_2)"},
 	{"PROG2", F_prog2, "(<= X_1 X_2)"},
 	{"PROGN", F_progn, "(<= X_1 X_2)"},

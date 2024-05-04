@@ -147,7 +147,7 @@ void set_object(objectp name, objectp value)
 {
 	object_pairp p, next;
 
-	if (value == NULL)
+	if (value == NULL || value == null)
 	{
 		fprintf(stderr, "; SET OBJECT: NULL VALUE.");
 		longjmp(je, 1);
@@ -232,10 +232,11 @@ void dump_object(int pool_number)
 		for (p = setobjs_list; p != NULL; p = p->next)
 		{
 			princ_object(stdout, p->name);
-			printf(":");
+			printf(": ");
 			princ_object(stdout, p->value);
 			printf("\n");
 		}
+		printf("| USED\t  FREE|\n");
 		for (i = 0; i <= 7; i++)
 		{
 			if (pool[i].used_size > 0)
@@ -244,12 +245,14 @@ void dump_object(int pool_number)
 	}
 	else if (pool_number >= 3 && pool_number <= 7)
 	{
+
 		for (q = pool[pool_number].head.u; q != NULL; q = q->next)
 		{
 			princ_object(stdout, q);
 			printf(" ");
 		}
 		printf("\n");
+		printf("| USED\t  FREE|\n");
 		printf("|%6zu %6zu|\n", pool[pool_number].used_size, pool[pool_number].free_size);
 	}
 	else
