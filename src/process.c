@@ -17,9 +17,7 @@ void clean_buffers(void)
 	free(token_buffer);
 	fclose(input_file);
 }
-
-static void
-process_file(void)
+void process_file(void)
 {
 	objectp p = NULL;
 	init_lex();
@@ -79,7 +77,10 @@ void process_input(const char *filename)
 	else
 		input_file = stdin;
 	if (input_file != stdin)
+	{
 		process_file();
+		clean_buffers();
+	}
 	else
 		process_stdin();
 }

@@ -1,43 +1,43 @@
 #ifndef LIBSISP_H
-const char *builtin_functions[] = {
-	"(define (caar x) (car (car x)))\n",
-	"(define (cadr x) (car (cdr x)))\n",
-	"(define (cdar x) (cdr (car x)))\n",
-	"(define (cddr x) (cdr (cdr x)))\n",
-	"(define (caaar x) (car (car (car x))))\n",
-	"(define (caadr x) (car (car (cdr x))))\n",
-	"(define (cadar x) (car (cdr (car x))))\n",
-	"(define (caddr x) (car (cdr (cdr x))))\n",
-	"(define (cdaar x) (cdr (car (car x))))\n",
-	"(define (cdadr x) (cdr (car (cdr x))))\n",
-	"(define (cddar x) (cdr (cdr (car x))))\n",
-	"(define (cdddr x) (cdr (cdr (cdr x))))\n",
-	"(define (butlast l)\n",
-	"	(cond ((eq (cdr l) nil) nil)\n",
-	"		(t (cons (car l) (butlast (cdr l))))))\n",
-	"(define (get-names x)\n",
-	"    (cond ((eq x nil) nil)",
-	"           (t (cons (caar x) (get-names (cdr x))))))\n",
-	"(define (get-values x)\n",
-	"    (cond ((eq x nil) nil)",
-	"           (t (cons (cdar x) (get-values (cdr x))))))\n",
-	"(define (unpair x)\n",
-	"    (list (get-names x) (get-values x)))\n",
-	"(define (rplaca x y)\n",
-	"  (cons y (cdr x)))\n",
-	"(define (rplacd x y)\n"
-	"  (cons (car x) y))\n",
-	"(define (alt x)\n",
-	"  (cond ((or (not x)\n",
-	"	      (not (cdr x))) x)\n",
-	"	 (t (cons (car x) (alt (cddr x))))))\n",
-	"(define (succ x y)\n",
-	"  (cond ((or (not y) (not (cdr y))) nil)\n",
-	"	((eq (car y) x) (cadr y))\n",
-	"	(t (succ x (cdr y)))))\n",
-	"(define (pred x y)\n",
-	"  (cond ((or (not y) (not (cdr y))) nil)\n",
-	"	((eq (cadr y) x) (car y))\n",
-	"	(t (pred x (cdr y)))))\n"};
+static char builtin_functions[] =
+	"(define (caar x) (car (car x)))"
+	"(define (cadr x) (car (cdr x)))"
+	"(define (cdar x) (cdr (car x)))"
+	"(define (cddr x) (cdr (cdr x)))"
+	"(define (caaar x) (car (car (car x))))"
+	"(define (caadr x) (car (car (cdr x))))"
+	"(define (cadar x) (car (cdr (car x))))"
+	"(define (caddr x) (car (cdr (cdr x))))"
+	"(define (cdaar x) (cdr (car (car x))))"
+	"(define (cdadr x) (cdr (car (cdr x))))"
+	"(define (cddar x) (cdr (cdr (car x))))"
+	"(define (cdddr x) (cdr (cdr (cdr x))))"
+	"(define (butlast l)"
+	"(cond ((eq (cdr l) nil) nil)"
+	"(t (cons (car l) (butlast (cdr l))))))"
+	"(define (get-names x)"
+	"    (cond ((eq x nil) nil)"
+	"           (t (cons (caar x) (get-names (cdr x))))))"
+	"(define (get-values x)"
+	"    (cond ((eq x nil) nil)"
+	"           (t (cons (cdar x) (get-values (cdr x))))))"
+	"(define (unpair x)"
+	"    (list (get-names x) (get-values x)))"
+	"(define (rplaca x y)"
+	"  (cons y (cdr x)))"
+	"(define (rplacd x y)"
+	"  (cons (car x) y))"
+	"(define (alt x)"
+	"  (cond ((or (not x)"
+	"      (not (cdr x))) x)"
+	" (t (cons (car x) (alt (cddr x))))))"
+	"(define (succ x y)"
+	"  (cond ((or (not y) (not (cdr y))) nil)"
+	"((eq (car y) x) (cadr y))"
+	"(t (succ x (cdr y)))))"
+	"(define (pred x y)"
+	"  (cond ((or (not y) (not (cdr y))) nil)"
+	"((eq (cadr y) x) (car y))"
+	"(t (pred x (cdr y)))))";
 #define LIBSISP_H
 #endif

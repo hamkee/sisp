@@ -77,7 +77,26 @@ F_cat(const struct object *args)
 	result->value.s.len = arg1->value.s.len + arg2->value.s.len;
 	return result;
 }
-
+static objectp
+F_pow(const struct object *args)
+{
+	objectp arg1, arg2, r;
+	arg1 = eval(car(args));
+	arg2 = eval(cadr(args));
+	_ASSERTP(ISNUMERIC(arg1), NOT NUMERIC, ^, arg1);
+	_ASSERTP(arg2->type == OBJ_INTEGER, NOT INTEGER, ^, arg2);
+	r = new_object(arg1->type);
+	if (arg1->type == OBJ_INTEGER)
+	{
+		r->value.i = (long int)pow((double)arg1->value.i, (double)arg2->value.i);
+	}
+	else
+	{
+		r->value.r.n = (long int)pow((double)arg1->value.r.n, (double)arg2->value.i);
+		r->value.r.d = (long int)pow((double)arg1->value.r.d, (double)arg2->value.i);
+	}
+	return r;
+}
 static objectp
 F_less(const struct object *args)
 {
@@ -1294,6 +1313,12 @@ F_cap(const struct object *args)
 
 	return first;
 }
+objectp
+F_print(const struct object *arg)
+{
+	princ_object(stdout, eval(car(arg)));
+	return null;
+}
 funcs functions[FUNCS_N] = {
 	{"*", F_prod, "(NUM_1 ... NUM_k) -> NUM"},
 	{"+", F_add, "(NUM_1 ... NUM_k) -> NUM"},
@@ -1336,6 +1361,7 @@ funcs functions[FUNCS_N] = {
 	{"ORD", F_ord, "LIST -> NUM"},
 	{"PAIR", F_pair, "(LIST_1 LIST_2) -> LIST"},
 	{"POP", F_pop, "STACK -> X"},
+	{"PRINT", F_print, "OBJECT"},
 	{"PROG1", F_prog1, "(<= X_1 X_2)"},
 	{"PROG2", F_prog2, "(<= X_1 X_2)"},
 	{"PROGN", F_progn, "(<= X_1 X_2)"},
@@ -1348,4 +1374,6 @@ funcs functions[FUNCS_N] = {
 	{"SUBSTR", F_substr, "(NUM_1 NUM_2 STRING) -> STRING"},
 	{"TYPEOF", F_typeof, "X -> T"},
 	{"UNDEF", F_undef, "VAR -> [NIL|T]"},
-	{"XOR", F_xor, "(BOOL_1 ... BOOL_n) -> [NIL|T]"}};
+	{"XOR", F_xor, "(BOOL_1 ... BOOL_n) -> [NIL|T]"},
+	{"^", F_pow, "NUMBER INT -> NUMBER"},
+};

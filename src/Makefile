@@ -21,10 +21,10 @@ LEX = @LEX@
 YACC = @YACC@
 
 PROG = sisp
-OBJS = process.o main.o  vmm.o lexer.o libsisp.o parser.o funcs.o object.o misc.o eval.o 
+OBJS = process.o main.o  vmm.o lexer.o parser.o funcs.o object.o misc.o eval.o 
 
 .c.o:
-	$(CC) -c -g -fcommon -DGCTHREADS -I$(srcdir) $(CFLAGS) $<
+	$(CC) -c -fcommon -DGCTHREADS -I$(srcdir) $(CFLAGS) $<
 
 all: $(PROG)
 

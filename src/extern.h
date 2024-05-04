@@ -2,7 +2,6 @@
 #include <setjmp.h>
 extern void clean_pools(void);
 extern char *buffer;
-extern int write_m(int);
 extern jmp_buf jb;
 extern jmp_buf je;
 extern jmp_buf jl;
@@ -30,6 +29,7 @@ extern void dump_object(int);
 extern objectp parse_object(int);
 /* lexer.c */
 extern void process_input(const char *);
+extern  void process_file(void);
 extern FILE *input_file;
 extern char *token_buffer;
 extern void init_lex(void);
