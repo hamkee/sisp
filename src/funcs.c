@@ -32,6 +32,16 @@
 		eval(car(EXPR));      \
 	} while ((EXPR = cdr(EXPR)) != nil);
 
+__inline__ static objectp F_car(const struct object *args)
+{
+	return car(eval(car(args)));
+}
+
+__inline__ static objectp F_cdr(const struct object *args)
+{
+	return cdr(eval(car(args)));
+}
+
 static objectp
 F_strlen(const struct object *args)
 {
@@ -327,16 +337,6 @@ F_div(const struct object *args)
 	return rat;
 }
 
-__inline__ static objectp F_car(const struct object *args)
-{
-	return car(eval(car(args)));
-}
-
-__inline__ static objectp F_cdr(const struct object *args)
-{
-	return cdr(eval(car(args)));
-}
-
 objectp
 F_atom(const struct object *args)
 {
@@ -368,6 +368,7 @@ F_consp(const struct object *args)
 		return nil;
 	return t;
 }
+
 objectp
 F_loadfile(const struct object *args)
 {
@@ -485,7 +486,7 @@ F_cons(const struct object *args)
 
 	p->vcar = eval(car(args));
 	p->vcdr = eval(cadr(args));
-	return p; // args;
+	return p;
 }
 
 objectp
@@ -515,6 +516,7 @@ F_map(const struct object *args)
 	p = car(args);
 	_ASSERTP(p1->type == OBJ_CONS, NOT CONS, MAP, p1);
 	_ASSERTP(p->type == OBJ_IDENTIFIER, NOT IDENTIFER, MAP, p);
+
 	do
 	{
 		p = new_object(OBJ_CONS);
@@ -535,6 +537,7 @@ F_map(const struct object *args)
 			prev->vcdr = p;
 		prev = p;
 	} while ((p1 = cdr(p1)) != nil);
+
 	p = first;
 	first = prev = NULL;
 	do
@@ -1302,15 +1305,15 @@ funcs functions[FUNCS_N] = {
 	{">=", F_greateq, "(NUM_1 NUM_2) -> [NIL|T]"},
 	{"AND", F_and, "(BOOL_1 ... BOOL_n) -> [NIL|T]"},
 	{"APPEND", F_append, "(LIST_1 ... LIST_k) -> LIST"},
-	{"ASSOC", F_assoc, "(<= X_1 X_2)"},
+	{"ASSOC", F_assoc, "(IDENTIFIER ((X_1 V_1) ... (X_N V_N))) -> V_I"},
 	{"ATOMP", F_atom, "X -> [NIL|T]"},
 	{"BQUOTE", F_bquote, "EXPR -> EXPR"},
 	{"CAP", F_cap, "LIST_1 LIST_2 -> LIST"},
-	{"CAR", F_car, "LIST -> LIST"},
+	{"CAR", F_car, "LIST -> VALUE"},
 	{"CAT", F_cat, "(STRING_1 STRING_2) -> STRING"},
 	{"CDR", F_cdr, "LIST -> LIST"},
 	{"COMMA", F_comma, "EXPR -> EXPR"},
-	{"COND", F_cond, "( (EXPR_1)  -> "},
+	{"COND", F_cond, "(((COND_1) (EXPR_1)) ... ((COND_N) EXPR_N)) -> VAL "},
 	{"CONS", F_cons, "(X_1 X_2) -> CONS"},
 	{"CONSP", F_consp, "X -> [NIL|T]"},
 	{"DEFINE", F_setq, "(VAR_1 VAL_1 ... VAR_k VAL_k) -> VAL_k"},
@@ -1341,7 +1344,7 @@ funcs functions[FUNCS_N] = {
 	{"QUOTE", F_quote, "X -> IDENTIFIER"},
 	{"SEQ", F_seq, "INT_1 INT_2 -> LIST"},
 	{"STRLEN", F_strlen, "STRING -> NUM"},
-	{"SUBST", F_subst, "(<= X_1 X_2)"},
+	{"SUBST", F_subst, "(X Y (X_1 ... X_N)) -> LIST"},
 	{"SUBSTR", F_substr, "(NUM_1 NUM_2 STRING) -> STRING"},
 	{"TYPEOF", F_typeof, "X -> T"},
 	{"UNDEF", F_undef, "VAR -> [NIL|T]"},

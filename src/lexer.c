@@ -9,16 +9,27 @@
 
 #define BUFFER_SIZE 64
 #define XGETC() ((lex_bufp > lex_buf) ? *--lex_bufp : toupper(fgetc(input_file)))
-#define XUNGETC(c) *lex_bufp++ = c
+#define XUNGETC(c) *lex_bufp++ = (c)
+
 #define CLEAN_BUFFER                                \
 	do                                              \
 	{                                               \
 		XUNGETC(c);                                 \
 		while (((c = XGETC()) == '\n') && c != EOF) \
 			;                                       \
-		memset(token_buffer, 0, BUFFER_SIZE);      \
+		memset(token_buffer, 0, BUFFER_SIZE);       \
 		longjmp(jl, 1);                             \
 	} while (0)
+
+#define CHECK_TOKEN_SIZE											\
+	do																\
+	{																\
+		if (p - token_buffer == BUFFER_SIZE)						\
+		{															\
+			fprintf(stderr, "; TOKEN LENGTH > %d\n", BUFFER_SIZE);	\
+			CLEAN_BUFFER;											\
+		}															\
+	} while(0)
 
 FILE *input_file;
 static int lex_buf[2];
@@ -104,11 +115,7 @@ int gettoken(void)
 			p = token_buffer;
 			do
 			{
-				if (p - token_buffer == BUFFER_SIZE)
-				{
-					fprintf(stderr, "; TOKEN LENGTH > %d\n", BUFFER_SIZE);
-					CLEAN_BUFFER;
-				}
+				CHECK_TOKEN_SIZE;
 				*p++ = c;
 				c = XGETC();
 			} while (isdigit(c));
@@ -120,11 +127,7 @@ int gettoken(void)
 			}
 			else if (c == '/')
 			{
-				if (p - token_buffer == BUFFER_SIZE)
-				{
-					fprintf(stderr, "; TOKEN LENGTH > %d\n", BUFFER_SIZE);
-					CLEAN_BUFFER;
-				}
+				CHECK_TOKEN_SIZE;
 				*p++ = c;
 				c = XGETC();
 				if (c != '-' && !isdigit(c))
@@ -133,11 +136,7 @@ int gettoken(void)
 				}
 				do
 				{
-					if (p - token_buffer == BUFFER_SIZE)
-					{
-						fprintf(stderr, "; TOKEN LENGTH > %d\n", BUFFER_SIZE);
-						CLEAN_BUFFER;
-					}
+					CHECK_TOKEN_SIZE;
 					*p++ = c;
 					c = XGETC();
 				} while (isdigit(c));
@@ -177,11 +176,7 @@ int gettoken(void)
 			p = token_buffer;
 			do
 			{
-				if (p - token_buffer == BUFFER_SIZE)
-				{
-					fprintf(stderr, "; TOKEN LENGTH > %d\n", BUFFER_SIZE);
-					CLEAN_BUFFER;
-				}
+				CHECK_TOKEN_SIZE;
 				*p++ = c;
 				c = XGETC();
 			} while (isalnum(c) || strchr("*+/<=>-_#", c) != NULL);
