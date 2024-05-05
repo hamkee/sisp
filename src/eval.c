@@ -12,7 +12,7 @@
 static int
 compar(const void *p1, const void *p2)
 {
-	return strcmp(((funcs *)p1)->name, ((funcs *)p2)->name);
+	return strcmp(((const funcs *)p1)->name, ((const funcs *)p2)->name);
 }
 
 objectp
@@ -32,7 +32,7 @@ eval_rat(const struct object *args)
 
 	n = args->value.r.n;
 	d = args->value.r.d;
-	_ASSERTP(d != 0L, DIVISION BY ZERO, EVAL, null);
+	_ASSERTP(d != 0L, DIVISION BY ZERO, EVAL RAT, null);
 	if (n < 0)
 	{
 		sign = 1;
@@ -139,7 +139,7 @@ eval_bquote(objectp args)
 		r = new_object(OBJ_CONS);
 		if (p1->type == OBJ_CONS)
 			r->vcar = eval_bquote(p1);
-		else if (p1->type == OBJ_IDENTIFIER && !strcmp(p1->value.id, "COMMA"))
+		else if (p1->type == OBJ_IDENTIFIER && !strcmp(p1->value.id, "comma"))
 		{
 			r->vcar = eval(args);
 			if (first == NULL)
@@ -169,10 +169,10 @@ eval_cons(const struct object *p)
 	unsigned long n_args = 0;
 	_ASSERTP(car(p)->type == OBJ_IDENTIFIER, NOT A FUNCTION, EVAL, car(p));
 
-	if (!strcmp(car(p)->value.id, "LAMBDA"))
+	if (!strcmp(car(p)->value.id, "lambda"))
 	{
 		q = new_object(OBJ_IDENTIFIER);
-		q->value.id = strdup("LAMBDA");
+		q->value.id = strdup("lambda");
 		return q;
 	}
 	key.name = car(p)->value.id;

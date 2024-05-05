@@ -109,7 +109,7 @@ void init_objects(void)
 		pool[i].head.f->next = NULL;
 		new_heap_list = pool[i].head.f;
 		j = (i == 3 ? 31 : 255);
-		pool[i].free_size = j + 1;
+		pool[i].free_size = (unsigned int) j + 1;
 		while (j--)
 		{
 			pool[i].head.f->next = malloc(OBJ_SIZE);
@@ -152,11 +152,12 @@ void set_object(objectp name, objectp value)
 		fprintf(stderr, "; SET OBJECT: NULL VALUE.");
 		longjmp(je, 1);
 	}
-	if (name->type != OBJ_IDENTIFIER)
+	if (name->type != OBJ_IDENTIFIER || !strcmp(name->value.id, "null"))
 	{
 		fprintf(stderr, "; SET OBJECT: NOT IDENTIFIER NAME.");
 		longjmp(je, 1);
 	}
+
 	for (p = setobjs_list; p != NULL; p = next)
 	{
 		next = p->next;
@@ -317,7 +318,7 @@ void garbage_collect(void)
 {
 	objectp p, prev, next;
 	objectp new_used_objs_list;
-	int i;
+	a_type i;
 
 	if (++gc_id == UINT_MAX - 1)
 		gc_id = 1;

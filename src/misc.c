@@ -112,7 +112,7 @@ gcd(long int a, long int b)
 
 unsigned long card(objectp p)
 {
-	register int i = 0;
+	register unsigned long i = 0;
 	while (p != nil && p->type == OBJ_CONS)
 	{
 		p = p->vcdr;

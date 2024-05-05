@@ -58,7 +58,7 @@ void recycle_pool(a_type type)
 	return;
 }
 
-void feed_pool(a_type type)
+static void feed_pool(a_type type)
 {
 	size_t units;
 	objectp new_heap_list;

@@ -17,6 +17,7 @@ void clean_buffers(void)
 	free(token_buffer);
 	fclose(input_file);
 }
+
 void process_file(void)
 {
 	objectp p = NULL;

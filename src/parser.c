@@ -62,14 +62,14 @@ parse_object(int havetoken)
 	case '`':
 		p = new_object(OBJ_CONS);
 		p->value.c.car = new_object(OBJ_IDENTIFIER);
-		p->value.c.car->value.id = strdup("BQUOTE");
+		p->value.c.car->value.id = strdup("bquote");
 		p->value.c.cdr = new_object(OBJ_CONS);
 		p->value.c.cdr->value.c.car = parse_object(0);
 		break;
 	case ',':
 		p = new_object(OBJ_CONS);
 		p->value.c.car = new_object(OBJ_IDENTIFIER);
-		p->value.c.car->value.id = strdup("COMMA");
+		p->value.c.car->value.id = strdup("comma");
 		p->value.c.cdr = new_object(OBJ_CONS);
 		p->value.c.cdr->value.c.car = parse_object(0);
 		break;
@@ -79,14 +79,14 @@ parse_object(int havetoken)
 	case '\'':
 		p = new_object(OBJ_CONS);
 		p->value.c.car = new_object(OBJ_IDENTIFIER);
-		p->value.c.car->value.id = strdup("QUOTE");
+		p->value.c.car->value.id = strdup("quote");
 		p->value.c.cdr = new_object(OBJ_CONS);
 		p->value.c.cdr->value.c.car = parse_object(0);
 		break;
 	case IDENTIFIER:
-		if (!strcmp(token_buffer, "T"))
+		if (!strcmp(token_buffer, "t"))
 			p = t;
-		else if (!strcmp(token_buffer, "NIL"))
+		else if (!strcmp(token_buffer, "nil"))
 			p = nil;
 		else if ((p = search_object_identifier(token_buffer)) == NULL)
 		{
@@ -99,7 +99,7 @@ parse_object(int havetoken)
 		{
 			p = new_object(OBJ_STRING);
 			p->value.s.str = strdup(token_buffer);
-			p->value.s.len = strlen(p->value.s.str);
+			p->value.s.len = (long) strlen(p->value.s.str);
 		}
 		break;
 	case INTEGER:

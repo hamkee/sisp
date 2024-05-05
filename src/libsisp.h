@@ -1,5 +1,7 @@
 #ifndef LIBSISP_H
+
 #define BUILTIN_SIZE sizeof(builtin_functions) / sizeof(char)
+
 static char builtin_functions[] =
 	"(define (caar x) (car (car x)))"
 	"(define (cadr x) (car (cdr x)))"

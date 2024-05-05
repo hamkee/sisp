@@ -6,19 +6,16 @@ prefix = /usr/local
 exec_prefix = ${prefix}
 
 bindir = ${exec_prefix}/bin
-mandir = ${prefix}/man/man1
 
 INSTALL_PROGRAM = ${INSTALL}
 INSTALL_DATA = ${INSTALL} -m 644
 INSTALL = /usr/bin/install -c
 
 CC = cc
-CFLAGS = -g -Wall -pedantic
+CFLAGS = -g -Wall -pedantic -Wextra
 LDFLAGS = -lpthread -lm
 LIBS =   
 
-LEX = @LEX@
-YACC = @YACC@
 
 PROG = sisp
 OBJS = process.o main.o  vmm.o lexer.o parser.o funcs.o object.o misc.o eval.o 
@@ -34,13 +31,12 @@ $(PROG): $(OBJS)
 .PHONY: install uninstall clean realclean distclean mostlyclean
 
 install: $(PROG)
-	$(srcdir)/../mkinsdir.sh $(DESTDIR)$(bindir) $(DESTDIR)$(mandir)
+	$(srcdir)/../mkinsdir.sh $(DESTDIR)$(bindir) 
 	$(INSTALL_PROGRAM) $(PROG) $(DESTDIR)$(bindir)
-	$(INSTALL_DATA) $(srcdir)/$(PROG).1 $(DESTDIR)$(mandir)/$(PROG).1
+	$(INSTALL_DATA) $(srcdir)/$(PROG).1 
 
 uninstall:
 	rm -f $(DESTDIR)$(bindir)/$(PROG)
-	rm -f $(DESTDIR)$(mandir)/$(PROG).1
 
 clean: 
 	-rm -f $(PROG) *.o *.*~
