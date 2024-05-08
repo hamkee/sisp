@@ -21,21 +21,22 @@
 		longjmp(jl, 1);                             \
 	} while (0)
 
-#define CHECK_TOKEN_SIZE											\
-	do																\
-	{																\
-		if (p - token_buffer == BUFFER_SIZE)						\
-		{															\
-			fprintf(stderr, "; TOKEN LENGTH > %d\n", BUFFER_SIZE);	\
-			CLEAN_BUFFER;											\
-		}															\
-	} while(0)
+#define CHECK_TOKEN_SIZE                                           \
+	do                                                             \
+	{                                                              \
+		if (p - token_buffer == BUFFER_SIZE)                       \
+		{                                                          \
+			fprintf(stderr, "; TOKEN LENGTH > %d\n", BUFFER_SIZE); \
+			CLEAN_BUFFER;                                          \
+		}                                                          \
+	} while (0)
 
 FILE *input_file;
 static int lex_buf[2];
 static int *lex_bufp;
 char *token_buffer;
 static int par = 0;
+static int keysym = 0;
 jmp_buf jl;
 
 void init_lex(void)
@@ -90,6 +91,7 @@ int gettoken(void)
 		case '(':
 			par++;
 			return c;
+
 		case ')':
 			par--;
 			if (par < 0)
@@ -99,18 +101,43 @@ int gettoken(void)
 			}
 			c = ')';
 			return c;
+		case '{':
+			keysym++;
+			return c;
+		case '}':
+			keysym--;
+			if (keysym < 0)
+			{
+				keysym = 0;
+				CLEAN_BUFFER;
+			}
+			c = '}';
+			return c;
+
 		case ' ':
 			while (isspace(c = XGETC()))
 				;
 			XUNGETC(c);
-		case '\f': case '\t': case '\v': case '\r': case '\n':
+		case '\f':
+		case '\t':
+		case '\v':
+		case '\r':
+		case '\n':
 			break;
 		case ';':
 			while (XGETC() != '\n')
 				;
 			break;
-		case '0': case '1': case '2': case '3': case '4':
-		case '5': case '6': case '7': case '8': case '9':
+		case '0':
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+		case '6':
+		case '7':
+		case '8':
+		case '9':
 		case '-':
 			p = token_buffer;
 			do
@@ -119,7 +146,8 @@ int gettoken(void)
 				*p++ = c;
 				c = XGETC();
 			} while (isdigit(c));
-			if (c == ' ' || c == ')' || c == '(' || c == '\n' || c == EOF)
+			if (c == ' ' || c == '}' || c == '{' ||
+				c == ')' || c == '(' || c == '\n' || c == EOF)
 			{
 				XUNGETC(c);
 				*p = '\0';
@@ -140,7 +168,8 @@ int gettoken(void)
 					*p++ = c;
 					c = XGETC();
 				} while (isdigit(c));
-				if (c == ' ' || c == ')' || c == '(' || c == '\n' || c == EOF)
+				if (c == ' ' || c == '}' || c == '{' ||
+					c == ')' || c == '(' || c == '\n' || c == EOF)
 				{
 					XUNGETC(c);
 					*p = '\0';
@@ -155,7 +184,7 @@ int gettoken(void)
 			string_buffer = BUFFER_SIZE;
 			do
 			{
-				if (p - token_buffer >= string_buffer)
+				if (p - token_buffer >= (long)string_buffer)
 				{
 					string_buffer += BUFFER_SIZE;
 					token_buffer = (char *)realloc(token_buffer, string_buffer);
@@ -167,12 +196,41 @@ int gettoken(void)
 			} while (c != '"');
 			*p++ = '\0';
 			return STRING;
-		case '*': case '+': case '/': case '<': case '=': case '>': 
-		case '_': case '#': case 'a': case 'b': case 'c': case 'd': 
-		case 'e': case 'f': case 'g': case 'h': case 'i': case 'j':
-		case 'k': case 'l': case 'm': case 'n': case 'o': case 'p': 
-		case 'q': case 'r': case 's': case 't': case 'u': case 'v':
-		case 'w': case 'x': case 'y': case 'z': case '^': 
+		case '*':
+		case '+':
+		case '/':
+		case '<':
+		case '=':
+		case '>':
+		case '_':
+		case '#':
+		case 'a':
+		case 'b':
+		case 'c':
+		case 'd':
+		case 'e':
+		case 'f':
+		case 'g':
+		case 'h':
+		case 'i':
+		case 'j':
+		case 'k':
+		case 'l':
+		case 'm':
+		case 'n':
+		case 'o':
+		case 'p':
+		case 'q':
+		case 'r':
+		case 's':
+		case 't':
+		case 'u':
+		case 'v':
+		case 'w':
+		case 'x':
+		case 'y':
+		case 'z':
+		case '^':
 			p = token_buffer;
 			do
 			{

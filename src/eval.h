@@ -16,29 +16,33 @@
 	(p->type) == OBJ_T ? t : (p->type) == OBJ_NIL	   ? nil                   \
 						 : (p->type) == OBJ_NULL	   ? handsig("EVAL ERROR") \
 						 : (p->type) == OBJ_INTEGER	   ? (p)                   \
-						 : (p->type) == OBJ_RATIONAL   ? eval_rat(p)           \
-						 : (p->type) == OBJ_IDENTIFIER ? get_object(p)         \
+						 : (p->type) == OBJ_RATIONAL   ? eval_rat((p))         \
+						 : (p->type) == OBJ_IDENTIFIER ? get_object((p))       \
 						 : (p->type) == OBJ_STRING	   ? (p)				   \
-						 : (p->type) == OBJ_CONS	   ? eval_cons(p)          \
+						 : (p->type) == OBJ_CONS	   ? eval_cons((p))        \
+						 : (p->type) == OBJ_SET		   ? eval_set((p))		   \
 													   : (p))
 
-#define try_eval(p) (                                                   \
-	(p->type) == OBJ_T ? t : (p->type) == OBJ_NIL	   ? nil            \
-						 : (p->type) == OBJ_NULL	   ? null           \
-						 : (p->type) == OBJ_INTEGER	   ? (p)            \
-						 : (p->type) == OBJ_RATIONAL   ? eval_rat(p)    \
-						 : (p->type) == OBJ_IDENTIFIER ? try_object(p)  \
-						 : (p->type) == OBJ_STRING	   ? (p) 			\
-						 : (p->type) == OBJ_CONS	   ? eval_cons(p)   \
+#define try_eval(p) (                                                    \
+	(p->type) == OBJ_T ? t : (p->type) == OBJ_NIL	   ? nil             \
+						 : (p->type) == OBJ_NULL	   ? null            \
+						 : (p->type) == OBJ_INTEGER	   ? (p)             \
+						 : (p->type) == OBJ_RATIONAL   ? eval_rat((p))   \
+						 : (p->type) == OBJ_IDENTIFIER ? try_object((p)) \
+						 : (p->type) == OBJ_STRING	   ? (p) 			 \
+						 : (p->type) == OBJ_CONS	   ? eval_cons((p))  \
+						 : (p->type) == OBJ_SET		   ? eval_set((p))   \
 													   : (p))
 
 #define car(p) (											\
-	(p->type) == OBJ_CONS ? p->value.c.car 					\
+	(((p->type) == OBJ_CONS) || ((p->type) == OBJ_SET)) 	\
+							? p->value.c.car 				\
 							: (p->type) == OBJ_NIL ? nil 	\
 							: handsig("CAR: UNDEFINED"))
 
 #define cdr(p) (                                            \
-	(p->type) == OBJ_CONS ? p->value.c.cdr					\
+	(((p->type) == OBJ_CONS) || ((p->type) == OBJ_SET)) 	\
+							? p->value.c.cdr				\
 							: (p->type) == OBJ_NIL ? nil 	\
 							: handsig("CDR: UNDEFINED"))
 
@@ -49,7 +53,8 @@
 objectp eval_bquote(objectp);
 objectp eval_rat(const struct object *);
 objectp eval_cons(const struct object *);
-
+objectp eval_set(const struct object *);
+int in_set( objectp,objectp);
 #define _EVAL_H
 
 #endif

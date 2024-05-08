@@ -5,7 +5,7 @@
 
 #include "sisp.h"
 #include "extern.h"
-
+#include "misc.h"
 static int thistoken;
 
 __inline__ static objectp parse_form(void)
@@ -34,7 +34,36 @@ __inline__ static objectp parse_form(void)
 		prev = p;
 	}
 	// this is for '()
-		return (first == NULL) ? null : first;
+	return (first == NULL) ? null : first;
+}
+
+__inline__ static objectp parse_set(void)
+{
+	objectp p, first, prev;
+	first = prev = (objectp)NULL;
+
+	while ((thistoken = gettoken()) != '}' && thistoken != EOF)
+	{
+		if (thistoken == ':')
+		{
+			thistoken = gettoken();
+			if (prev == NULL)
+				longjmp(jb, 1);
+			prev->value.c.cdr = parse_object(1);
+			if ((thistoken = gettoken()) != '}')
+				longjmp(jb, 1);
+			break;
+		}
+		p = new_object(OBJ_SET);
+		if (first == NULL)
+			first = p;
+		if (prev != NULL)
+			prev->value.c.cdr = p;
+		p->value.c.car = parse_object(1);
+		prev = p;
+	}
+	// this is for '()
+	return (first == NULL) ? null : first;
 }
 
 objectp
@@ -76,6 +105,9 @@ parse_object(int havetoken)
 	case '(':
 		p = parse_form();
 		break;
+	case '{':
+		p = parse_set();
+		break;
 	case '\'':
 		p = new_object(OBJ_CONS);
 		p->value.c.car = new_object(OBJ_IDENTIFIER);
@@ -99,7 +131,7 @@ parse_object(int havetoken)
 		{
 			p = new_object(OBJ_STRING);
 			p->value.s.str = strdup(token_buffer);
-			p->value.s.len = (long) strlen(p->value.s.str);
+			p->value.s.len = (long)strlen(p->value.s.str);
 		}
 		break;
 	case INTEGER:

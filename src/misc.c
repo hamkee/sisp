@@ -7,15 +7,17 @@
 #include "eval.h"
 #include "extern.h"
 
+objectp eqcons(objectp, objectp);
+
 void princ_object(FILE *fout, const struct object *p)
 {
 	switch (p->type)
 	{
 	case OBJ_NIL:
-		fputs("NIL", fout);
+		fputs("nil", fout);
 		break;
 	case OBJ_T:
-		fputc('T', fout);
+		fputc('t', fout);
 		break;
 	case OBJ_IDENTIFIER:
 		if (p->value.id != NULL)
@@ -52,9 +54,108 @@ void princ_object(FILE *fout, const struct object *p)
 		} while (p != nil && p->type == OBJ_CONS);
 		fputc(')', fout);
 		break;
+
+	case OBJ_SET:
+		fputc('{', fout);
+		do
+		{
+			princ_object(fout, p->vcar);
+			p = p->vcdr;
+			if (p != nil)
+			{
+				fputc(' ', fout);
+				if (p->type != OBJ_SET)
+				{
+					fputs(": ", fout);
+					princ_object(fout, p);
+				}
+			}
+		} while (p != nil && p->type == OBJ_SET);
+		fputc('}', fout);
+		break;
 	default:
 		return;
 	}
+}
+objectp
+eqset(objectp a, objectp b)
+{
+	objectp c, tmp, count;
+	int found = -1;
+	count = b;
+	if(cdr(a)->type != OBJ_SET || cdr(b)->type != OBJ_SET)
+		return nil;
+	do
+	{
+		tmp = b;
+		found = -1;
+		do
+		{
+			if (a->vcar->type == tmp->vcar->type)
+			{
+				switch (a->vcar->type)
+				{
+				case OBJ_INTEGER:
+					if (a->vcar->value.i == tmp->vcar->value.i)
+					{
+						found = 1;
+					}
+					break;
+				case OBJ_RATIONAL:
+					if (a->vcar->value.r.n == tmp->vcar->value.r.n &&
+						a->vcar->value.r.d == tmp->vcar->value.r.d)
+					{
+						found = 1;
+					}
+					break;
+				case OBJ_T:
+				case OBJ_NIL:
+					found = 1;
+					break;
+				case OBJ_IDENTIFIER:
+					if (strcmp(a->vcar->value.id, tmp->vcar->value.id) == 0)
+					{
+						found = 1;
+					}
+					break;
+				case OBJ_STRING:
+					if (strcmp(a->vcar->value.s.str, tmp->vcar->value.s.str) == 0)
+					{
+						found = 1;
+					}
+					break;
+				case OBJ_CONS:
+					c = eqcons(a->vcar, tmp->vcar);
+					if (c == t)
+					{
+						found = 1;
+					}
+					break;
+				case OBJ_SET:
+					c = eqset(a->vcar, tmp->vcar);
+					if (c == t)
+					{
+						found = 1;
+					}
+					break;
+				default:
+					found = -1;
+					break;
+				}
+			}
+			if (found == 1)
+				break;
+		} while ((tmp = cdr(tmp)) != nil);
+		if (found == -1)
+		{
+			return nil;
+		}
+		count = cdr(count);
+	} while (((a = cdr(a)) != nil));
+	if (count != nil)
+		return nil;
+
+	return t;
 }
 
 objectp
@@ -169,6 +270,51 @@ sst(objectp b, objectp v, objectp body)
 			prev->vcdr = q;
 		prev = q;
 	} while ((body = cdr(body)) != nil);
-	
+
 	return first;
+}
+
+int in_set(objectp x, objectp y)
+{
+	objectp p;
+	if (y == nil || y == NULL)
+		return 0;
+	do
+	{
+		p = car(y);
+		if (x->type != p->type)
+			continue;
+		switch (x->type)
+		{
+		case OBJ_NIL:
+		case OBJ_T:
+			if (x == p)
+				return 1;
+			break;
+		case OBJ_IDENTIFIER:
+			if (!strcmp(x->value.id, p->value.id))
+				return 1;
+			break;
+		case OBJ_STRING:
+			if (!strcmp(x->value.s.str, p->value.s.str))
+				return 1;
+			break;
+		case OBJ_INTEGER:
+			if (x->value.i == p->value.i)
+				return 1;
+			break;
+		case OBJ_RATIONAL:
+			if (x->value.r.d == p->value.r.d &&
+				x->value.r.n == p->value.r.n)
+				return 1;
+			break;
+		case OBJ_CONS:
+			if (eqcons(x, p) == t)
+				return 1;
+			break;
+		default:
+			break;
+		}
+	} while ((y = cdr(y)) != nil);
+	return 0;
 }

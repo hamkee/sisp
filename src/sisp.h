@@ -3,6 +3,7 @@
 #define INTEGER     5
 #define RATIONAL    6
 #define STRING      7
+#define SET         8
 #define OBJ_SIZE sizeof(struct object)
 
 typedef enum
@@ -20,6 +21,7 @@ typedef enum
   OBJ_INTEGER,
   OBJ_RATIONAL,
   OBJ_STRING,
+  OBJ_SET,
 } a_type;
 
 typedef struct object *objectp;

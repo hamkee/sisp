@@ -69,7 +69,7 @@ eval_func(objectp p, objectp args)
 {
 	objectp head_args, b, q, M, bind_list;
 	q = head_args = b = NULL;
-	
+
 	bind_list = cadr(p);
 
 	if (bind_list == nil)
@@ -188,4 +188,34 @@ eval_cons(const struct object *p)
 	}
 
 	return eval_func(func_name, cdr(p));
+}
+
+objectp
+eval_set(const struct object *p)
+{
+	objectp p1, r, first, prev;
+	first = prev = NULL;
+	r = nil;
+	if(cdr(p)->type != OBJ_SET) {
+		first = (objectp) p;
+		return first;
+	}
+	do
+	{
+		p1 = p->value.c.car;
+		if (!in_set(p1, first))
+		{
+			r = new_object(OBJ_SET);
+			r->value.c.car = p1;
+		} else {
+			continue;
+		}
+		if (first == NULL)
+			first = r;
+		if (prev != NULL)
+			prev->vcdr = r;
+		prev = r;
+	} while ((p = cdr(p)) != nil);
+
+	return first;
 }

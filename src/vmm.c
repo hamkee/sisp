@@ -38,7 +38,7 @@ void recycle_pool(a_type type)
 
 	if (type == OBJ_IDENTIFIER)
 		chunk_size = 32;
-	else if (type == OBJ_CONS)
+	else if (type == OBJ_CONS || type == OBJ_SET)
 		chunk_size = 128;
 	else
 		chunk_size = 16;
@@ -65,7 +65,7 @@ static void feed_pool(a_type type)
 
 	if (type == OBJ_IDENTIFIER)
 		units = 15;
-	else if (type == OBJ_CONS)
+	else if (type == OBJ_CONS || type == OBJ_SET)
 		units = 127;
 	else
 		units = 7;

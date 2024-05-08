@@ -16,6 +16,7 @@
 objectp nil;
 objectp t;
 objectp null;
+objectp u;
 
 static object_pairp setobjs_list = NULL;
 static unsigned int gc_id = 0;
@@ -31,7 +32,7 @@ new_object(a_type type)
 	p->next = pool[type].head.u;
 	pool[type].head.u = p;
 	pool[type].used_size++;
-	if (type == OBJ_CONS)
+	if (type == OBJ_CONS || type == OBJ_SET)
 		p->vcar = p->vcdr = nil;
 	if (type == OBJ_STRING)
 		p->value.s.len = 0;
@@ -93,8 +94,8 @@ void init_objects(void)
 	null = new_object(OBJ_NULL);
 	nil = new_object(OBJ_NIL);
 	t = new_object(OBJ_T);
-
-	for (i = 3; i <= 7; i++)
+	u = (objectp )malloc(OBJ_SIZE);
+	for (i = 3; i <= 8; i++)
 	{
 		pool[i].head.u = NULL;
 		pool[i].head.f = NULL;
@@ -109,7 +110,7 @@ void init_objects(void)
 		pool[i].head.f->next = NULL;
 		new_heap_list = pool[i].head.f;
 		j = (i == 3 ? 31 : 255);
-		pool[i].free_size = (unsigned int) j + 1;
+		pool[i].free_size = (unsigned int)j + 1;
 		while (j--)
 		{
 			pool[i].head.f->next = malloc(OBJ_SIZE);
@@ -120,6 +121,22 @@ void init_objects(void)
 		pool[i].head.f->next = NULL;
 		pool[i].head.f = new_heap_list;
 	}
+	pool[OBJ_SET].head.f = malloc(OBJ_SIZE);
+	if (pool[OBJ_SET].head.f == NULL)
+		fprintf(stderr, "allocating memory\n");
+	pool[OBJ_SET].head.f->next = NULL;
+	new_heap_list = pool[OBJ_SET].head.f;
+	j = 127;
+	pool[OBJ_SET].free_size = (unsigned int)j + 1;
+	while (j--)
+	{
+		pool[OBJ_SET].head.f->next = malloc(OBJ_SIZE);
+		if (pool[OBJ_SET].head.f->next == NULL)
+			fprintf(stderr, "allocating memory\n");
+		pool[OBJ_SET].head.f = pool[OBJ_SET].head.f->next;
+	}
+	pool[OBJ_SET].head.f->next = NULL;
+	pool[OBJ_SET].head.f = new_heap_list;
 }
 
 void remove_object(objectp name)
@@ -238,13 +255,13 @@ void dump_object(int pool_number)
 			printf("\n");
 		}
 		printf("| USED\t  FREE|\n");
-		for (i = 0; i <= 7; i++)
+		for (i = 0; i <= 8; i++)
 		{
 			if (pool[i].used_size > 0)
 				printf("|%6zu %6zu|\n", pool[i].used_size, pool[i].free_size);
 		}
 	}
-	else if (pool_number >= 3 && pool_number <= 7)
+	else if (pool_number >= 3 && pool_number <= 8)
 	{
 
 		for (q = pool[pool_number].head.u; q != NULL; q = q->next)
@@ -268,7 +285,7 @@ static void *tt(void *tree)
 	if ((*t_ptr)->gc == gc_id)
 		return NULL;
 	(*t_ptr)->gc = gc_id;
-	if ((*t_ptr)->type == OBJ_CONS)
+	if ((*t_ptr)->type == OBJ_CONS || (*t_ptr)->type == OBJ_SET)
 	{
 		tt(&((*t_ptr)->vcar));
 		tt(&((*t_ptr)->vcdr));
@@ -325,7 +342,7 @@ void garbage_collect(void)
 
 	tag_whole_tree();
 
-	for (i = 3; i <= 7; i++)
+	for (i = 3; i <= 8; i++)
 	{
 		prev = NULL;
 		new_used_objs_list = NULL;
@@ -356,7 +373,3 @@ void garbage_collect(void)
 	}
 }
 
-/*
-GARBAGE COLLECTOR WITH THREADS
-
-*/
