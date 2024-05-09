@@ -10,7 +10,7 @@ void clean_pools(void)
 	objectp p;
 	int i;
 
-	for (i = 0; i < NUM_POOLS; i++)
+	for (i = 0; i < NUM_POOLS - 1; i++)
 	{
 		while ((p = pool[i].head.u) != NULL)
 		{

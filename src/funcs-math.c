@@ -283,3 +283,47 @@ F_less(const struct object *args)
     }
     return null;
 }
+objectp
+F_and(const struct object *args)
+{
+	objectp p1;
+	do
+	{
+		p1 = eval(car(args));
+		if (p1 == nil)
+			return nil;
+	} while ((args = cdr(args)) != nil);
+	return p1;
+}
+
+objectp
+F_or(const struct object *args)
+{
+	objectp p1;
+	do
+	{
+		p1 = eval(car(args));
+		if (p1 != nil)
+			return p1;
+	} while ((args = cdr(args)) != nil);
+	return nil;
+}
+
+objectp
+F_not(const struct object *args)
+{
+	return eval(car(args)) != nil ? nil : t;
+}
+
+objectp
+F_xor(const struct object *args)
+{
+	objectp first;
+	first = eval(car(args));
+	do
+	{
+		if (eval(car(args)) != first)
+			return nil;
+	} while ((args = cdr(args)) != nil);
+	return t;
+}

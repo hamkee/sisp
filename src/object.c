@@ -247,7 +247,7 @@ void dump_object(int pool_number)
 	objectp q;
 	object_pairp p;
 	int i;
-
+	char *pool_name[] = {NULL, NULL, NULL, "ID", "CONS", "INT", "RAT", "STR", "SET"};
 	if (pool_number == 0)
 	{
 		for (p = setobjs_list; p != NULL; p = p->next)
@@ -257,11 +257,11 @@ void dump_object(int pool_number)
 			princ_object(stdout, p->value);
 			printf("\n");
 		}
-		printf("| USED\t  FREE|\n");
-		for (i = 0; i <= 8; i++)
+		printf("|POOL\t   USED\t  FREE|\n");
+		for (i = 3; i <= 8; i++)
 		{
 			if (pool[i].used_size > 0)
-				printf("|%6zu %6zu|\n", pool[i].used_size, pool[i].free_size);
+				printf("|%s\t %6zu %6zu|\n", pool_name[i], pool[i].used_size, pool[i].free_size);
 		}
 	}
 	else if (pool_number >= 3 && pool_number <= 8)
@@ -273,8 +273,8 @@ void dump_object(int pool_number)
 			printf(" ");
 		}
 		printf("\n");
-		printf("| USED\t  FREE|\n");
-		printf("|%6zu %6zu|\n", pool[pool_number].used_size, pool[pool_number].free_size);
+		printf("|POOL\t   USED\t  FREE|\n");
+		printf("|%s\t %6zu %6zu|\n", pool_name[pool_number], pool[pool_number].used_size, pool[pool_number].free_size);
 	}
 	else
 	{

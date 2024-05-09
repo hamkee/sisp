@@ -13,8 +13,52 @@
 #include "funcs.h"
 #include "eval.h"
 #include "misc.h"
-
-objectp unionbyextension(const struct object *args)
+int in_set(objectp x, objectp y)
+{
+	objectp p;
+	if (y == nil || y == NULL)
+		return 0;
+	do
+	{
+		p = car(y);
+		if (x->type != p->type)
+			continue;
+		switch (x->type)
+		{
+		case OBJ_NIL:
+		case OBJ_T:
+			if (x == p)
+				return 1;
+			break;
+		case OBJ_IDENTIFIER:
+			if (!strcmp(x->value.id, p->value.id))
+				return 1;
+			break;
+		case OBJ_STRING:
+			if (!strcmp(x->value.s.str, p->value.s.str))
+				return 1;
+			break;
+		case OBJ_INTEGER:
+			if (x->value.i == p->value.i)
+				return 1;
+			break;
+		case OBJ_RATIONAL:
+			if (x->value.r.d == p->value.r.d &&
+				x->value.r.n == p->value.r.n)
+				return 1;
+			break;
+		case OBJ_CONS:
+			if (eqcons(x, p) == t)
+				return 1;
+			break;
+		default:
+			break;
+		}
+	} while ((y = cdr(y)) != nil);
+	return 0;
+}
+objectp
+unionbyextension(const struct object *args)
 {
 	objectp p, p1, first, prev, ret;
 	first = prev = NULL;
@@ -351,4 +395,21 @@ F_diff(const struct object *args)
 	} while ((arg1 = cdr(arg1)) != nil);
 
 	return first == NULL ? nil : first;
+}
+objectp
+F_complement(const struct object *args)
+{
+	objectp p, ret;
+	p = eval(car(args));
+
+	_ASSERTP(p->type == OBJ_SET && COMPSET(p), NOT COMPREHENSION SET, COMPLEMENT, p);
+	ret = new_object(OBJ_SET);
+	ret->value.c.car = tau;
+	ret->value.c.cdr = new_object(OBJ_CONS);
+	ret->vcdr->vcar = new_object(OBJ_IDENTIFIER);
+	ret->vcdr->vcar->value.id = strdup("not");
+	ret->vcdr->vcdr = new_object(OBJ_CONS);
+	ret->vcdr->vcdr->vcar = cdr(p);
+
+	return ret;
 }

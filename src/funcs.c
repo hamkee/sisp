@@ -60,6 +60,40 @@ F_cat(const struct object *args)
 	result->value.s.len = arg1->value.s.len + arg2->value.s.len;
 	return result;
 }
+
+objectp
+F_substr(const struct object *args)
+{
+	objectp arg1, arg2, arg3;
+	objectp result;
+	int offset = 0;
+	arg1 = eval(car(args));
+	arg2 = eval(car(cdr(args)));
+	arg3 = eval(car(cdr(cdr(args))));
+	_ASSERTP(arg1->type == OBJ_INTEGER, NON INTEGER, SUBSTR, arg1);
+	_ASSERTP(arg2->type == OBJ_INTEGER, NON INTEGER, SUBSTR, arg2);
+	_ASSERTP(arg3->type == OBJ_STRING, NON STRING, SUBSTR, arg3);
+
+	result = new_object(OBJ_STRING);
+	if (arg1->value.i > arg3->value.s.len)
+	{
+		fprintf(stderr, "; INDEX OUT OF BOUNDS\n");
+		return nil;
+	}
+	if (arg1->value.i + arg2->value.i > arg3->value.s.len)
+		offset = arg3->value.s.len - arg1->value.i;
+	else
+		offset = arg2->value.i;
+	result->value.s.str = (char *)malloc(offset * sizeof(char));
+	if (result->value.s.str == NULL)
+	{
+		fprintf(stderr, "; UNABLE TO ALLOCATE MEMORY\n");
+		return nil;
+	}
+	strncpy(result->value.s.str, arg3->value.s.str + arg1->value.i, offset);
+	return result;
+}
+
 static objectp
 F_seq(const struct object *args)
 {
@@ -344,51 +378,6 @@ objectp
 F_quote(const struct object *args)
 {
 	return car(args);
-}
-
-objectp
-F_and(const struct object *args)
-{
-	objectp p1;
-	do
-	{
-		p1 = eval(car(args));
-		if (p1 == nil)
-			return nil;
-	} while ((args = cdr(args)) != nil);
-	return p1;
-}
-
-objectp
-F_or(const struct object *args)
-{
-	objectp p1;
-	do
-	{
-		p1 = eval(car(args));
-		if (p1 != nil)
-			return p1;
-	} while ((args = cdr(args)) != nil);
-	return nil;
-}
-
-objectp
-F_not(const struct object *args)
-{
-	return eval(car(args)) != nil ? nil : t;
-}
-
-objectp
-F_xor(const struct object *args)
-{
-	objectp first;
-	first = eval(car(args));
-	do
-	{
-		if (eval(car(args)) != first)
-			return nil;
-	} while ((args = cdr(args)) != nil);
-	return t;
 }
 
 objectp
@@ -856,38 +845,7 @@ F_undef(const struct object *args)
 	remove_object(p);
 	return t;
 }
-objectp
-F_substr(const struct object *args)
-{
-	objectp arg1, arg2, arg3;
-	objectp result;
-	int offset = 0;
-	arg1 = eval(car(args));
-	arg2 = eval(car(cdr(args)));
-	arg3 = eval(car(cdr(cdr(args))));
-	_ASSERTP(arg1->type == OBJ_INTEGER, NON INTEGER, SUBSTR, arg1);
-	_ASSERTP(arg2->type == OBJ_INTEGER, NON INTEGER, SUBSTR, arg2);
-	_ASSERTP(arg3->type == OBJ_STRING, NON STRING, SUBSTR, arg3);
 
-	result = new_object(OBJ_STRING);
-	if (arg1->value.i > arg3->value.s.len)
-	{
-		fprintf(stderr, "; INDEX OUT OF BOUNDS\n");
-		return nil;
-	}
-	if (arg1->value.i + arg2->value.i > arg3->value.s.len)
-		offset = arg3->value.s.len - arg1->value.i;
-	else
-		offset = arg2->value.i;
-	result->value.s.str = (char *)malloc(offset * sizeof(char));
-	if (result->value.s.str == NULL)
-	{
-		fprintf(stderr, "; UNABLE TO ALLOCATE MEMORY\n");
-		return nil;
-	}
-	strncpy(result->value.s.str, arg3->value.s.str + arg1->value.i, offset);
-	return result;
-}
 static int
 compar(const void *p1, const void *p2)
 {
@@ -962,6 +920,7 @@ const funcs functions[] = {
 	{"cat", F_cat, "(STRING_1 STRING_2) -> STRING"},
 	{"cdr", F_cdr, "LIST -> LIST"},
 	{"comma", F_comma, "EXPR -> EXPR"},
+	{"comp", F_complement, "SET -> SET"},
 	{"cond", F_cond, "(((COND_1) (EXPR_1)) ... ((COND_N) EXPR_N)) -> VAL "},
 	{"cons", F_cons, "(X_1 X_2) -> CONS"},
 	{"consp", F_consp, "X -> [NIL|T]"},

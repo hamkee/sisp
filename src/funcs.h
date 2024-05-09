@@ -10,15 +10,21 @@ extern objectp F_add(const struct object *);
 extern objectp F_prod(const struct object *);
 extern objectp F_div(const struct object *);
 extern objectp F_mod(const struct object *);
+extern objectp F_and(const struct object *);
+extern objectp F_or(const struct object *);
+extern objectp F_not(const struct object *);
+extern objectp F_xor(const struct object *);
+
 // funcs-set
 extern objectp F_cap(const struct object *);
 extern objectp F_union(const struct object *);
 extern objectp F_diff(const struct object *);
 extern objectp F_subset(const struct object *);
 extern objectp F_setprod(const struct object *);
+extern objectp F_complement(const struct object *);
 
 extern objectp F_progn(const struct object *);
-#define FUNCS_N 63
+#define FUNCS_N 64
 extern const funcs functions[FUNCS_N];
 #define ISNUMERIC(x) ((x)->type == OBJ_INTEGER || (x)->type == OBJ_RATIONAL) \
 						 ? true                                              \
