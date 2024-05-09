@@ -17,6 +17,7 @@ objectp nil;
 objectp t;
 objectp null;
 objectp u;
+objectp tau;
 
 static object_pairp setobjs_list = NULL;
 static unsigned int gc_id = 0;
@@ -94,7 +95,9 @@ void init_objects(void)
 	null = new_object(OBJ_NULL);
 	nil = new_object(OBJ_NIL);
 	t = new_object(OBJ_T);
-	u = (objectp )malloc(OBJ_SIZE);
+	u = (objectp)malloc(OBJ_SIZE);
+	tau = new_object(OBJ_TAU);
+
 	for (i = 3; i <= 8; i++)
 	{
 		pool[i].head.u = NULL;
@@ -372,4 +375,3 @@ void garbage_collect(void)
 		recycle_pool(i);
 	}
 }
-

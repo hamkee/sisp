@@ -18,7 +18,7 @@ LIBS =
 
 
 PROG = sisp
-OBJS = process.o main.o  vmm.o lexer.o parser.o funcs.o object.o misc.o eval.o 
+OBJS = process.o main.o  vmm.o lexer.o parser.o funcs-set.o funcs-math.o funcs.o object.o misc.o eval.o 
 
 .c.o:
 	$(CC) -c -fcommon -DGCTHREADS -I$(srcdir) $(CFLAGS) $<

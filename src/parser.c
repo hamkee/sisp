@@ -120,6 +120,8 @@ parse_object(int havetoken)
 			p = t;
 		else if (!strcmp(token_buffer, "nil"))
 			p = nil;
+		else if (!strcmp(token_buffer, "tau"))
+			p = tau;
 		else if ((p = search_object_identifier(token_buffer)) == NULL)
 		{
 			p = new_object(OBJ_IDENTIFIER);

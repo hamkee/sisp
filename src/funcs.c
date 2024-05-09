@@ -60,54 +60,6 @@ F_cat(const struct object *args)
 	result->value.s.len = arg1->value.s.len + arg2->value.s.len;
 	return result;
 }
-
-static objectp
-F_pow(const struct object *args)
-{
-	objectp arg1, arg2, r;
-	arg1 = eval(car(args));
-	arg2 = eval(cadr(args));
-	_ASSERTP(ISNUMERIC(arg1), NOT NUMERIC, ^, arg1);
-	_ASSERTP(arg2->type == OBJ_INTEGER, NOT INTEGER, ^, arg2);
-	if (arg1->type == OBJ_INTEGER)
-	{
-		r = new_object(OBJ_INTEGER);
-		r->value.i = (long int)pow((double)arg1->value.i, (double)arg2->value.i);
-	}
-	else
-	{
-		r = new_object(OBJ_RATIONAL);
-		r->value.r.n = (long int)pow((double)arg1->value.r.n, (double)arg2->value.i);
-		r->value.r.d = (long int)pow((double)arg1->value.r.d, (double)arg2->value.i);
-	}
-	return r;
-}
-
-static objectp
-F_less(const struct object *args)
-{
-	objectp arg1, arg2;
-	arg1 = eval(car(args));
-	arg2 = eval(cadr(args));
-	_ASSERTP(ISNUMERIC(arg1), NOT NUMERIC, <, arg1);
-	_ASSERTP(ISNUMERIC(arg2), NOT NUMERIC, <, arg2);
-
-	if (arg1->type == OBJ_INTEGER)
-	{
-		if (arg2->type == OBJ_INTEGER)
-			return (arg1->value.i < arg2->value.i) ? t : nil;
-		if (arg2->type == OBJ_RATIONAL)
-			return (arg1->value.i * arg2->value.r.d < arg2->value.r.n) ? t : nil;
-	}
-	else if (arg1->type == OBJ_RATIONAL)
-	{
-		if (arg2->type == OBJ_INTEGER)
-			return (arg1->value.r.n < arg1->value.r.d * arg2->value.i) ? t : nil;
-		if (arg2->type == OBJ_RATIONAL)
-			return (arg1->value.r.n * arg2->value.r.d < arg2->value.r.n * arg1->value.r.d) ? t : nil;
-	}
-	return null;
-}
 static objectp
 F_seq(const struct object *args)
 {
@@ -134,213 +86,7 @@ F_seq(const struct object *args)
 	} while (i <= arg2->value.i);
 	return first;
 }
-static objectp
-F_lesseq(const struct object *args)
-{
-	objectp arg1, arg2;
-	arg1 = eval(car(args));
-	arg2 = eval(cadr(args));
-	_ASSERTP(ISNUMERIC(arg1), NOT NUMERIC, <=, arg1);
-	_ASSERTP(ISNUMERIC(arg2), NOT NUMERIC, <=, arg2);
 
-	if (arg1->type == OBJ_INTEGER)
-	{
-		if (arg2->type == OBJ_INTEGER)
-			return (arg1->value.i <= arg2->value.i) ? t : nil;
-		if (arg2->type == OBJ_RATIONAL)
-			return (arg1->value.i * arg2->value.r.d <= arg2->value.r.n) ? t : nil;
-	}
-	else if (arg1->type == OBJ_RATIONAL)
-	{
-		if (arg2->type == OBJ_INTEGER)
-			return (arg1->value.r.n <= arg1->value.r.d * arg2->value.i) ? t : nil;
-		if (arg2->type == OBJ_RATIONAL)
-			return (arg1->value.r.n * arg2->value.r.d <= arg2->value.r.n * arg1->value.r.d) ? t : nil;
-	}
-	return null;
-}
-
-static objectp
-F_great(const struct object *args)
-{
-	objectp arg1, arg2;
-	arg1 = eval(car(args));
-	arg2 = eval(cadr(args));
-	_ASSERTP(ISNUMERIC(arg1), NOT NUMERIC, >, arg1);
-	_ASSERTP(ISNUMERIC(arg2), NOT NUMERIC, >, arg2);
-
-	if (arg1->type == OBJ_INTEGER)
-	{
-		if (arg2->type == OBJ_INTEGER)
-			return (arg1->value.i > arg2->value.i) ? t : nil;
-		if (arg2->type == OBJ_RATIONAL)
-			return (arg1->value.i * arg2->value.r.d > arg2->value.r.n) ? t : nil;
-	}
-	else if (arg1->type == OBJ_RATIONAL)
-	{
-		if (arg2->type == OBJ_INTEGER)
-			return (arg1->value.r.n > arg1->value.r.d * arg2->value.i) ? t : nil;
-		if (arg2->type == OBJ_RATIONAL)
-			return (arg1->value.r.n * arg2->value.r.d > arg2->value.r.n * arg1->value.r.d) ? t : nil;
-	}
-	return null;
-}
-
-static objectp
-F_greateq(const struct object *args)
-{
-	objectp arg1, arg2;
-	arg1 = eval(car(args));
-	arg2 = eval(cadr(args));
-	_ASSERTP(ISNUMERIC(arg1), NOT NUMERIC, >=, arg1);
-	_ASSERTP(ISNUMERIC(arg2), NOT NUMERIC, >=, arg2);
-
-	if (arg1->type == OBJ_INTEGER)
-	{
-		if (arg2->type == OBJ_INTEGER)
-			return (arg1->value.i >= arg2->value.i) ? t : nil;
-		if (arg2->type == OBJ_RATIONAL)
-			return (arg1->value.i * arg2->value.r.d >= arg2->value.r.n) ? t : nil;
-	}
-	else if (arg1->type == OBJ_RATIONAL)
-	{
-		if (arg2->type == OBJ_INTEGER)
-			return (arg1->value.r.n >= arg1->value.r.d * arg2->value.i) ? t : nil;
-		if (arg2->type == OBJ_RATIONAL)
-			return (arg1->value.r.n * arg2->value.r.d >= arg2->value.r.n * arg1->value.r.d) ? t : nil;
-	}
-	return null;
-}
-
-static objectp
-F_add(const struct object *args)
-{
-	long int i, d, n, g;
-	objectp p;
-	i = n = 0L;
-	d = 1L;
-	do
-	{
-		p = eval(car(args));
-		if (p->type == OBJ_INTEGER)
-			i += p->value.i;
-		else if (p->type == OBJ_RATIONAL)
-		{
-			n = (n * p->value.r.d) + (d * p->value.r.n);
-			d *= p->value.r.d;
-		}
-		else
-			_ASSERTP(false, NOT NUMERIC, ADD, p);
-	} while ((args = cdr(args)) != nil);
-
-	if (n == 0L)
-	{
-		p = new_object(OBJ_INTEGER);
-		p->value.i = i;
-		return p;
-	}
-	else
-	{
-		p = new_object(OBJ_RATIONAL);
-		if (i != 0L)
-			n += d * i;
-		g = gcd(n, d);
-		p->value.r.n = n / g;
-		p->value.r.d = d / g;
-	}
-	return eval(p);
-}
-
-static objectp
-F_prod(const struct object *args)
-{
-	long int i, d, n, g;
-	objectp p;
-
-	i = d = n = 1L;
-	do
-	{
-		p = eval(car(args));
-		if (p->type == OBJ_INTEGER)
-			i *= p->value.i;
-		else if (p->type == OBJ_RATIONAL)
-		{
-			d *= p->value.r.d;
-			n *= p->value.r.n;
-		}
-		else
-			_ASSERTP(false, NOT NUMERIC ARGUMENT, PROD, p);
-	} while ((args = cdr(args)) != nil);
-
-	if (d == 1L)
-	{
-		p = new_object(OBJ_INTEGER);
-		p->value.i = i;
-		return p;
-	}
-	else
-	{
-		p = new_object(OBJ_RATIONAL);
-		n = n * i;
-		g = gcd(n, d);
-		p->value.r.n = n / g;
-		p->value.r.d = d / g;
-	}
-	return eval(p);
-}
-
-static objectp
-F_div(const struct object *args)
-{
-	long int g, u, v;
-	objectp d, n, rat;
-
-	n = eval(car(args));
-	d = eval(car(cdr(args)));
-	_ASSERTP(ISNUMERIC(n), NOT NUMERIC, DIV, n);
-	_ASSERTP(ISNUMERIC(d), NOT NUMERIC, DIV, d);
-
-	if (n->type == OBJ_INTEGER)
-	{
-		g = n->value.i;
-		n = new_object(OBJ_RATIONAL);
-		n->value.r.n = g;
-		n->value.r.d = 1L;
-	}
-	if (d->type == OBJ_INTEGER)
-	{
-		_ASSERTP(d->value.i != 0, DIVISION BY ZERO, DIV, d);
-		g = d->value.i;
-		d = new_object(OBJ_RATIONAL);
-		d->value.r.n = g;
-		d->value.r.d = 1L;
-	}
-	_ASSERTP(d->value.r.d != 0, ZERO DENOMINATOR, DIV, d);
-	_ASSERTP(n->value.r.d != 0, ZERO DENOMINATOR, DIV, n);
-	u = n->value.r.n * d->value.r.d;
-	v = n->value.r.d * d->value.r.n;
-	g = gcd(u, v);
-	u = u / g;
-	v = v / g;
-	if (v == 1L)
-	{
-		rat = new_object(OBJ_INTEGER);
-		rat->value.i = u;
-		return rat;
-	}
-	rat = new_object(OBJ_RATIONAL);
-	if (v < 0L)
-	{
-		rat->value.r.n = -u;
-		rat->value.r.d = -v;
-	}
-	else
-	{
-		rat->value.r.n = u;
-		rat->value.r.d = v;
-	}
-	return rat;
-}
 
 objectp
 F_atom(const struct object *args)
@@ -435,6 +181,9 @@ F_typeof(const struct object *args)
 	case OBJ_SET:
 		p->value.id = strdup("set");
 		break;
+	case OBJ_TAU:
+		p->value.id = strdup("tau");
+		break;
 	case OBJ_IDENTIFIER:
 		p->value.id = strdup("identifier");
 		break;
@@ -478,7 +227,7 @@ F_ord(const struct object *args)
 		q->value.i = 1L;
 		return q;
 	}
-	_ASSERTP(p->type == OBJ_CONS || p->type == OBJ_SET, NON CONS ARGUMENT, ORD, p);
+	_ASSERTP(p->type == OBJ_CONS || (p->type == OBJ_SET && !COMPSET(p)), NON CONS ARGUMENT, ORD, p);
 	do
 	{
 		i++;
@@ -764,17 +513,10 @@ F_member(const struct object *args)
 	{
 		if (cdr(set)->type != OBJ_SET)
 		{
-			if (try_object(car(set)) != null)
-			{
-				tmp = get_object(car(set));
-				set_object(car(set), m);
-				ret = eval(cdr(set));
-				set_object(car(set), tmp);
-				return ret;
-			}
-			set_object(car(set), m);
+			tmp = tau;
+			tau = m;
 			ret = eval(cdr(set));
-			remove_object(car(set));
+			tau = tmp;
 			return ret;
 		}
 	}
@@ -892,49 +634,6 @@ F_pair(const struct object *args)
 	return first;
 }
 
-objectp
-F_append(const struct object *args)
-{
-	objectp p, p1, first, prev;
-	a_type type;
-	first = prev = NULL;
-	p = eval(car(args));
-	type = p->type;
-	_ASSERTP(((p->type == OBJ_CONS && !CONSP(p)) || p->type == OBJ_SET), NOT CONS, APPEND, p);
-	do
-	{
-		p1 = new_object(type);
-		p1->vcar = car(p);
-		if (first == NULL)
-			first = p1;
-		if (prev != NULL)
-			prev->vcdr = p1;
-		prev = p1;
-		p = cdr(p);
-	} while (p != nil);
-	args = cdr(args);
-	if (args == nil)
-		return (type == OBJ_SET) ? eval_set(first) : first;
-	do
-	{
-		p = eval(car(args));
-		_ASSERTP(((p->type == OBJ_CONS && !CONSP(p)) || p->type == OBJ_SET), NOT CONS, APPEND, p);
-		_ASSERTP((p->type == type), TYPE MISMATCH, APPEND, p);
-
-		do
-		{
-			p1 = new_object(type);
-			p1->vcar = car(p);
-			if (first == NULL)
-				first = p1;
-			if (prev != NULL)
-				prev->vcdr = p1;
-			prev = p1;
-			p = cdr(p);
-		} while (p != nil);
-	} while ((args = cdr(args)) != nil);
-	return (type == OBJ_SET) ? eval_set(first) : first;
-}
 
 objectp
 F_bquote(const struct object *args)
@@ -1224,213 +923,6 @@ F_help(const struct object *args)
 	}
 	return nil;
 }
-objectp
-F_mod(const struct object *args)
-{
-	objectp d, n, r;
-
-	n = eval(car(args));
-	d = eval(car(cdr(args)));
-
-	_ASSERTP(n->type == OBJ_INTEGER, NOT INTEGER, MOD, n);
-	_ASSERTP(d->type == OBJ_INTEGER, NOT INTEGER, MOD, d);
-	_ASSERTP(d->value.i != 0, DIVISION BY ZERO, MOD, d);
-
-	r = new_object(OBJ_INTEGER);
-	r->value.i = n->value.i % d->value.i;
-	return r;
-}
-
-objectp
-F_cap(const struct object *args)
-{
-	objectp arg1, arg2, tmp, c;
-	objectp first = NULL, prev = NULL, p1;
-	a_type type;
-	arg1 = eval(car(args));
-	arg2 = eval(cadr(args));
-
-	_ASSERTP((arg1->type == OBJ_CONS && arg2->type == OBJ_CONS) ||
-				 (arg1->type == OBJ_SET && arg2->type == OBJ_SET),
-			 NOT CONS, CAP, args);
-	type = arg1->type;
-	do
-	{
-		tmp = arg2;
-		do
-		{
-			if (arg1->vcar->type == tmp->vcar->type)
-			{
-				switch (arg1->vcar->type)
-				{
-				case OBJ_INTEGER:
-					if (arg1->vcar->value.i == tmp->vcar->value.i)
-					{
-						p1 = new_object(type);
-						p1->vcar = new_object(OBJ_INTEGER);
-						p1->vcar->value.i = arg1->vcar->value.i;
-						if (first == NULL)
-							first = p1;
-						if (prev != NULL)
-							prev->vcdr = p1;
-						prev = p1;
-					}
-					break;
-				case OBJ_RATIONAL:
-					if (arg1->vcar->value.r.n == tmp->vcar->value.r.n &&
-						arg1->vcar->value.r.d == tmp->vcar->value.r.d)
-					{
-						p1 = new_object(type);
-						p1->vcar = new_object(OBJ_RATIONAL);
-						p1->vcar->value.r.n = arg1->vcar->value.r.n;
-						p1->vcar->value.r.d = arg1->vcar->value.r.d;
-						if (first == NULL)
-							first = p1;
-						if (prev != NULL)
-							prev->vcdr = p1;
-						prev = p1;
-					}
-					break;
-				case OBJ_T:
-				case OBJ_NIL:
-					p1 = new_object(type);
-					p1->vcar = arg1->vcar;
-					if (first == NULL)
-						first = p1;
-					if (prev != NULL)
-						prev->vcdr = p1;
-					prev = p1;
-					break;
-				case OBJ_IDENTIFIER:
-					if (strcmp(arg1->vcar->value.id, tmp->vcar->value.id) == 0)
-					{
-						p1 = new_object(type);
-						p1->vcar = new_object(OBJ_IDENTIFIER);
-						p1->vcar->value.id = strdup(arg1->vcar->value.id);
-						if (first == NULL)
-							first = p1;
-						if (prev != NULL)
-							prev->vcdr = p1;
-						prev = p1;
-					}
-					break;
-				case OBJ_STRING:
-					if (strcmp(arg1->vcar->value.s.str, tmp->vcar->value.s.str) == 0)
-					{
-						p1 = new_object(type);
-						p1->vcar = new_object(OBJ_STRING);
-						p1->vcar->value.s.str = strdup(arg1->vcar->value.s.str);
-						if (first == NULL)
-							first = p1;
-						if (prev != NULL)
-							prev->vcdr = p1;
-						prev = p1;
-					}
-					break;
-				case OBJ_CONS:
-				case OBJ_SET:
-					c = (tmp->vcar->type == OBJ_SET) ? eqset(arg1->vcar, tmp->vcar) : eqcons(arg1->vcar, tmp->vcar);
-					if (c == t)
-					{
-						p1 = new_object(type);
-						p1->vcar = arg1->vcar;
-						if (first == NULL)
-							first = p1;
-						if (prev != NULL)
-							prev->vcdr = p1;
-						prev = p1;
-					}
-					break;
-
-				default:
-					break;
-				}
-			}
-		} while ((tmp = cdr(tmp)) != nil);
-	} while ((arg1 = cdr(arg1)) != nil);
-
-	return first;
-}
-
-objectp
-F_diff(const struct object *args)
-{
-	objectp arg1, arg2, tmp, c;
-	objectp first = NULL, prev = NULL, p1;
-	int found = 0;
-	arg1 = eval(car(args));
-	arg2 = eval(cadr(args));
-	_ASSERTP((arg1->type == OBJ_CONS && arg2->type == OBJ_CONS) ||
-				 (arg1->type == OBJ_SET && arg2->type == OBJ_SET),
-			 NOT CONS, DIFF, args);
-	do
-	{
-		tmp = arg2;
-		found = 0;
-		do
-		{
-			if (arg1->vcar->type == tmp->vcar->type)
-			{
-				switch (arg1->vcar->type)
-				{
-				case OBJ_INTEGER:
-					if (arg1->vcar->value.i == tmp->vcar->value.i)
-					{
-						found = 1;
-					}
-					break;
-				case OBJ_RATIONAL:
-					if (arg1->vcar->value.r.n == tmp->vcar->value.r.n &&
-						arg1->vcar->value.r.d == tmp->vcar->value.r.d)
-					{
-						found = 1;
-					}
-					break;
-				case OBJ_T:
-				case OBJ_NIL:
-					found = 1;
-					break;
-				case OBJ_IDENTIFIER:
-					if (strcmp(arg1->vcar->value.id, tmp->vcar->value.id) == 0)
-					{
-						found = 1;
-					}
-					break;
-				case OBJ_STRING:
-					if (strcmp(arg1->vcar->value.s.str, tmp->vcar->value.s.str) == 0)
-					{
-						found = 1;
-					}
-					break;
-				case OBJ_CONS:
-				case OBJ_SET:
-					c = (tmp->vcar->type == OBJ_SET) ? eqset(arg1->vcar, tmp->vcar) : eqcons(arg1->vcar, tmp->vcar);
-					if (c == t)
-					{
-						found = 1;
-					}
-					break;
-				default:
-					found = 0;
-					break;
-				}
-			}
-		} while ((tmp = cdr(tmp)) != nil);
-		if (found == 0)
-		{
-			p1 = new_object(arg1->type);
-			p1->vcar = arg1->vcar;
-			if (first == NULL)
-				first = p1;
-			if (prev != NULL)
-				prev->vcdr = p1;
-			prev = p1;
-		}
-
-	} while ((arg1 = cdr(arg1)) != nil);
-
-	return first == NULL ? nil : first;
-}
 
 objectp
 F_print(const struct object *arg)
@@ -1461,7 +953,7 @@ const funcs functions[] = {
 	{">=", F_greateq, "(NUM_1 NUM_2) -> [NIL|T]"},
 	{"^", F_pow, "NUMBER INT -> NUMBER"},
 	{"and", F_and, "(BOOL_1 ... BOOL_n) -> [NIL|T]"},
-	{"append", F_append, "(LIST_1 ... LIST_k) -> LIST"},
+	{"append", F_union, "(LIST_1 ... LIST_k) -> LIST"},
 	{"assoc", F_assoc, "(IDENTIFIER ((X_1 V_1) ... (X_N V_N))) -> V_I"},
 	{"atomp", F_atom, "X -> [NIL|T]"},
 	{"bquote", F_bquote, "EXPR -> EXPR"},
@@ -1482,6 +974,7 @@ const funcs functions[] = {
 	{"evlis", F_evlis, "((LIST_1) ... (LIST_N)) -> ( (EVAL LIST_1) ... (EVAL LIST_N))"},
 	{"help", F_help, "FUNC -> [NIL|T]"},
 	{"if", F_if, "(COND EXPR_T EXPR_NIL) -> EXPR"},
+	{"in", F_member, "X Y -> NIL|T"},
 	{"labels", F_labels, "((FUN_1) ... (FUN_m)) EXPR_1 .. EXPR_k) -> EXPR_k"},
 	{"let", F_let, "((ID_1 VAL_1) ... (ID_m VAL_m)) EXPR_1 .. EXPR_k) -> EXPR_k"},
 	{"list", F_list, "(X_1 X_2 .. X_k) -> LIST"},
@@ -1496,6 +989,7 @@ const funcs functions[] = {
 	{"par", F_pair, "(LIST_1 LIST_2) -> LIST"},
 	{"pop", F_pop, "STACK -> X"},
 	{"print", F_print, "OBJECT -> NULL"},
+	{"prod", F_setprod, "SET SET -> SET"},
 	{"prog1", F_prog1, "(<= X_1 X_2)"},
 	{"prog2", F_prog2, "(<= X_1 X_2)"},
 	{"progn", F_progn, "(<= X_1 X_2)"},
@@ -1504,10 +998,11 @@ const funcs functions[] = {
 	{"quote", F_quote, "X -> IDENTIFIER"},
 	{"seq", F_seq, "INT_1 INT_2 -> LIST"},
 	{"strlen", F_strlen, "STRING -> NUM"},
+	{"subset", F_subset, "(SET SET) -> [NIL|T]"},
 	{"subst", F_subst, "(X Y (X_1 ... X_N)) -> LIST"},
 	{"substr", F_substr, "(NUM_1 NUM_2 STRING) -> STRING"},
 	{"typeof", F_typeof, "X -> T"},
 	{"undef", F_undef, "VAR -> [NIL|T]"},
-	{"union", F_append, "SET SET -> SET"},
+	{"union", F_union, "SET SET -> SET"},
 	{"xor", F_xor, "(BOOL_1 ... BOOL_n) -> [NIL|T]"},
 };

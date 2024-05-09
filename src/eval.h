@@ -14,6 +14,7 @@
 
 #define eval(p) (                                                              \
 	(p->type) == OBJ_T ? t : (p->type) == OBJ_NIL	   ? nil                   \
+						 : (p->type) == OBJ_TAU	   	   ? tau                   \
 						 : (p->type) == OBJ_NULL	   ? handsig("EVAL ERROR") \
 						 : (p->type) == OBJ_INTEGER	   ? (p)                   \
 						 : (p->type) == OBJ_RATIONAL   ? eval_rat((p))         \
@@ -25,6 +26,7 @@
 
 #define try_eval(p) (                                                    \
 	(p->type) == OBJ_T ? t : (p->type) == OBJ_NIL	   ? nil             \
+					     : (p->type) == OBJ_TAU	   	   ? tau             \
 						 : (p->type) == OBJ_NULL	   ? null            \
 						 : (p->type) == OBJ_INTEGER	   ? (p)             \
 						 : (p->type) == OBJ_RATIONAL   ? eval_rat((p))   \

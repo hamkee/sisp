@@ -99,7 +99,7 @@ objectp
 oballoc(a_type obj_type)
 {
 	objectp p;
-	if (obj_type <= 2)
+	if (obj_type <= 2 || obj_type == 9)
 		return malloc(OBJ_SIZE);
 	if (pool[obj_type].free_size == 0)
 		feed_pool(obj_type);

@@ -196,8 +196,11 @@ eval_set(const struct object *p)
 	objectp p1, r, first, prev;
 	first = prev = NULL;
 	r = nil;
-	if(cdr(p)->type != OBJ_SET) {
-		first = (objectp) p;
+	if(COMPSET(p)) {
+		p1 = car(p);
+		first = new_object(OBJ_SET);
+		first->value.c.car = tau;
+		first->value.c.cdr = sst(car(p), tau, cdr(p));
 		return first;
 	}
 	do

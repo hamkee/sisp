@@ -19,6 +19,9 @@ void princ_object(FILE *fout, const struct object *p)
 	case OBJ_T:
 		fputc('t', fout);
 		break;
+	case OBJ_TAU:
+		fputs("tau", fout);
+		break;
 	case OBJ_IDENTIFIER:
 		if (p->value.id != NULL)
 			fputs(p->value.id, fout);
@@ -83,7 +86,7 @@ eqset(objectp a, objectp b)
 	objectp c, tmp, count;
 	int found = -1;
 	count = b;
-	if(cdr(a)->type != OBJ_SET || cdr(b)->type != OBJ_SET)
+	if (cdr(a)->type != OBJ_SET || cdr(b)->type != OBJ_SET)
 		return nil;
 	do
 	{
@@ -257,6 +260,11 @@ sst(objectp b, objectp v, objectp body)
 				break;
 			case OBJ_CONS:
 				q->vcar = (eqcons(b, p) == t) ? v : p;
+				if (q->vcar == p)
+					q->vcar = sst(b, v, p);
+				break;
+			case OBJ_SET:
+				q->vcar = (eqset(b, p) == t) ? v : p;
 				if (q->vcar == p)
 					q->vcar = sst(b, v, p);
 				break;

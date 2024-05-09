@@ -22,6 +22,7 @@ typedef enum
   OBJ_RATIONAL,
   OBJ_STRING,
   OBJ_SET,
+  OBJ_TAU,
 } a_type;
 
 typedef struct object *objectp;
