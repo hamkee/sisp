@@ -121,7 +121,6 @@ F_seq(const struct object *args)
 	return first;
 }
 
-
 objectp
 F_atom(const struct object *args)
 {
@@ -493,75 +492,6 @@ F_eq(const struct object *args)
 }
 
 objectp
-F_member(const struct object *args)
-{
-	objectp m, x, set, ret, tmp;
-	m = eval(car(args));
-	set = eval(cadr(args));
-	if (set->type == OBJ_SET)
-	{
-		if (cdr(set)->type != OBJ_SET)
-		{
-			tmp = tau;
-			tau = m;
-			ret = eval(cdr(set));
-			tau = tmp;
-			return ret;
-		}
-	}
-	_ASSERTP(set->type == OBJ_CONS || set->type == OBJ_SET, NOT CONS, MEMBERP, set);
-	do
-	{
-		x = car(set);
-		_ASSERTP(x->type != OBJ_NULL, IS NULL, MEMBERP, x);
-		switch (m->type)
-		{
-		case OBJ_IDENTIFIER:
-			if (x->type == OBJ_IDENTIFIER &&
-				!strcmp(m->value.id, x->value.id))
-				return t;
-			break;
-		case OBJ_STRING:
-			if (x->type == OBJ_STRING &&
-				!strcmp(m->value.s.str, x->value.s.str))
-				return t;
-			break;
-		case OBJ_CONS:
-			if (x->type == OBJ_CONS && eqcons(m, x) == t)
-				return t;
-			break;
-		case OBJ_SET:
-			if (x->type == OBJ_SET && eqset(m, x) == t)
-				return t;
-			break;
-		case OBJ_T:
-			if (x->type == OBJ_T)
-				return t;
-			break;
-		case OBJ_NIL:
-			if (x->type == OBJ_NIL)
-				return t;
-			break;
-		case OBJ_INTEGER:
-			if (x->type == OBJ_INTEGER)
-				if (x->value.i == m->value.i)
-					return t;
-			break;
-		case OBJ_RATIONAL:
-			if (x->type == OBJ_RATIONAL)
-				if ((x->value.r.d == m->value.r.d) &&
-					(x->value.r.n == m->value.r.n))
-					return t;
-			break;
-		default:
-			break;
-		}
-		set = cdr(set);
-	} while (set->type != OBJ_NIL);
-	return nil;
-}
-
-objectp
 F_defun(const struct object *args)
 {
 	objectp body;
@@ -622,7 +552,6 @@ F_pair(const struct object *args)
 	} while ((p1 = cdr(p1)) != nil && (p2 = cdr(p2)) != nil);
 	return first;
 }
-
 
 objectp
 F_bquote(const struct object *args)
@@ -942,6 +871,7 @@ const funcs functions[] = {
 	{"memberp", F_member, "(X_1 LIST) -> [NIL|T]"},
 	{"mod", F_mod, "INT_1 INT_2 -> INT"},
 	{"not", F_not, "BOOL -> BOOL"},
+	{"notin", F_notin, "SET -> [NIL|T]"},
 	{"numberp", F_numberp, "X -> [NIL|T]"},
 	{"or", F_or, "(BOOL_1 ... BOOL_n) -> [NIL|T]"},
 	{"ord", F_ord, "LIST -> NUM"},

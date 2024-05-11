@@ -18,7 +18,7 @@ objectp t;
 objectp null;
 objectp u;
 objectp tau;
-
+objectp empty;
 static object_pairp setobjs_list = NULL;
 static unsigned int gc_id = 0;
 
@@ -64,6 +64,7 @@ search_object_integer(const long int i)
 
 	return (objectp)NULL;
 }
+
 __inline__ objectp
 search_object_string(const char *s)
 {
@@ -75,6 +76,7 @@ search_object_string(const char *s)
 
 	return (objectp)NULL;
 }
+
 __inline__ objectp
 search_object_identifier(const char *s)
 {
@@ -95,8 +97,22 @@ void init_objects(void)
 	null = new_object(OBJ_NULL);
 	nil = new_object(OBJ_NIL);
 	t = new_object(OBJ_T);
-	u = (objectp)malloc(OBJ_SIZE);
 	tau = new_object(OBJ_TAU);
+	u = (objectp)malloc(OBJ_SIZE);
+
+	empty = new_object(OBJ_SET);
+	empty->vcar = tau;
+	empty->vcdr = new_object(OBJ_CONS);
+	empty->vcdr->vcar = new_object(OBJ_IDENTIFIER);
+	empty->vcdr->vcar->value.id = strdup("not");
+	empty->vcdr->vcdr = new_object(OBJ_CONS);
+	empty->vcdr->vcdr->vcar = new_object(OBJ_CONS);
+	empty->vcdr->vcdr->vcar->vcar = new_object(OBJ_IDENTIFIER);
+	empty->vcdr->vcdr->vcar->vcar->value.id = strdup("=");
+	empty->vcdr->vcdr->vcar->vcdr = new_object(OBJ_CONS);
+	empty->vcdr->vcdr->vcar->vcdr->vcar = tau;
+	empty->vcdr->vcdr->vcar->vcdr->vcdr = new_object(OBJ_CONS);
+	empty->vcdr->vcdr->vcar->vcdr->vcdr->vcar = tau;
 
 	for (i = 3; i <= 8; i++)
 	{
@@ -339,7 +355,6 @@ void garbage_collect(void)
 	objectp p, prev, next;
 	objectp new_used_objs_list;
 	a_type i;
-
 	if (++gc_id == UINT_MAX - 1)
 		gc_id = 1;
 

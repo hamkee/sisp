@@ -125,8 +125,11 @@ int gettoken(void)
 		case '\n':
 			break;
 		case ';':
-			while (XGETC() != '\n')
-				;
+			do
+			{
+				c = XGETC();
+			} while (c != '\n');
+			XUNGETC(c);
 			break;
 		case '0':
 		case '1':

@@ -40,9 +40,7 @@ static char builtin_functions[] =
 	"(define (pred x y)"
 	"	(cond ((or (not y) (not (cdr y))) nil)"
 	"	((eq (cadr y) x) (car y))"
-	"	(t (pred x (cdr y)))))"
-	"(define (symdiff x y)"
-	"	(append (diff x y) (diff y x)))";
+	"	(t (pred x (cdr y)))))";
 
 #define LIBSISP_H
 #endif

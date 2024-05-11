@@ -22,9 +22,12 @@ extern objectp F_diff(const struct object *);
 extern objectp F_subset(const struct object *);
 extern objectp F_setprod(const struct object *);
 extern objectp F_complement(const struct object *);
+extern objectp F_member(const struct object *);
+extern objectp F_notin(const struct object *);
+
 
 extern objectp F_progn(const struct object *);
-#define FUNCS_N 64
+#define FUNCS_N 65
 extern const funcs functions[FUNCS_N];
 #define ISNUMERIC(x) ((x)->type == OBJ_INTEGER || (x)->type == OBJ_RATIONAL) \
 						 ? true                                              \

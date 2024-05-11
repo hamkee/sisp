@@ -57,7 +57,6 @@ void princ_object(FILE *fout, const struct object *p)
 		} while (p != nil && p->type == OBJ_CONS);
 		fputc(')', fout);
 		break;
-
 	case OBJ_SET:
 		fputc('{', fout);
 		do
@@ -86,8 +85,12 @@ eqset(objectp a, objectp b)
 	objectp c, tmp, count;
 	int found = -1;
 	count = b;
-	if (cdr(a)->type != OBJ_SET || cdr(b)->type != OBJ_SET)
+	if ((cdr(a)->type != OBJ_SET && cdr(a) != nil) ||
+		(cdr(b)->type != OBJ_SET && cdr(b) != nil))
+	{
+		fprintf(stderr, "; EQSET: SET NOT BY EXTENSION\n");
 		return nil;
+	}
 	do
 	{
 		tmp = b;
@@ -241,6 +244,7 @@ sst(objectp b, objectp v, objectp body)
 			{
 			case OBJ_NIL:
 			case OBJ_T:
+			case OBJ_TAU:
 				q->vcar = (p->type == b->type) ? v : p;
 				break;
 			case OBJ_IDENTIFIER:
@@ -281,5 +285,3 @@ sst(objectp b, objectp v, objectp body)
 
 	return first;
 }
-
-

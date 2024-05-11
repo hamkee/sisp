@@ -14,6 +14,7 @@
 int main(int argc, char **argv)
 {
 	init_objects();
+
 	input_file = fmemopen(builtin_functions, strlen(builtin_functions), "r");
 	process_file();
 	fclose(input_file);

@@ -11,6 +11,7 @@ extern objectp nil;
 extern objectp t;
 extern objectp null;
 extern objectp tau;
+extern objectp empty;
 extern void init_objects(void);
 extern objectp new_object(a_type);
 extern objectp search_object_identifier(const char *);

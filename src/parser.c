@@ -63,7 +63,7 @@ __inline__ static objectp parse_set(void)
 		prev = p;
 	}
 	// this is for '()
-	return (first == NULL) ? null : first;
+	return (first == NULL) ? empty : first;
 }
 
 objectp

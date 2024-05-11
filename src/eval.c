@@ -196,6 +196,9 @@ eval_set(const struct object *p)
 	objectp p1, r, first, prev;
 	first = prev = NULL;
 	r = nil;
+	if(p == empty) {
+		return empty;
+	}
 	if(COMPSET(p)) {
 		p1 = car(p);
 		first = new_object(OBJ_SET);
