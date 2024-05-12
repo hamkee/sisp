@@ -218,6 +218,46 @@ objectp F_notin(const struct object *arg)
 {
 	return (F_member(arg) == nil) ? t : nil;
 }
+
+
+objectp
+unsafe_sanitize(objectp a)
+{
+	objectp f1, f2, f3;
+	objectp ctau, cdtau;
+
+	ctau = new_object(OBJ_CONS);
+	ctau->vcar = new_object(OBJ_IDENTIFIER);
+	ctau->vcar->value.id = strdup("car");
+	ctau->vcdr = new_object(OBJ_CONS);
+	ctau->vcdr->vcar = tau;
+
+	cdtau = new_object(OBJ_CONS);
+	cdtau->vcar = new_object(OBJ_IDENTIFIER);
+	cdtau->vcar->value.id = strdup("cdr");
+	cdtau->vcdr = new_object(OBJ_CONS);
+	cdtau->vcdr->vcar = tau;
+
+	f1 = ucar(ucdr(a));
+	if (f1->type != OBJ_IDENTIFIER || strcmp(f1->value.id, "and"))
+		return t;
+	f2 = ucar(ucar(ucdr(ucdr(a))));
+	if (f2->type != OBJ_IDENTIFIER || strcmp(f2->value.id, "in"))
+		return t;
+	f3 = ucar(ucar(ucdr(ucdr(ucdr(a)))));
+	if (f3->type != OBJ_IDENTIFIER || strcmp(f3->value.id, "in"))
+		return t;
+	if (!eqcons(ctau, ucar(ucdr(ucar(ucdr(ucdr(a)))))))
+		return t;
+	if (!eqcons(cdtau, ucar(ucdr(ucar(ucdr(ucdr(ucdr(a))))))))
+		return t;
+	if (!COMPSET(ucar(ucdr(ucdr(ucar(ucdr(ucdr(ucdr(a)))))))))
+		return t;
+	if (!COMPSET(ucar(ucdr(ucdr(ucar(ucdr(ucdr(ucdr(a)))))))))
+		return t;
+	return nil;
+}
+
 objectp
 sanitize(objectp a)
 {
@@ -237,25 +277,19 @@ sanitize(objectp a)
 	cdtau->vcdr->vcar = tau;
 
 	f1 = car(cdr(a));
-	if (f1->type != OBJ_IDENTIFIER)
-		return t;
-	if (strcmp(f1->value.id, "and"))
+	if (f1->type != OBJ_IDENTIFIER || strcmp(f1->value.id, "and"))
 		return t;
 	if (car(cdr(cdr(a)))->type != OBJ_CONS)
 		return t;
 	f2 = car(car(cdr(cdr(a))));
-	if (f2->type != OBJ_IDENTIFIER)
-		return t;
-	if (strcmp(f2->value.id, "in"))
+	if (f2->type != OBJ_IDENTIFIER || strcmp(f2->value.id, "in"))
 		return t;
 	if (cdr(cdr(cdr(a)))->type != OBJ_CONS)
 		return t;
 	if (car(cdr(cdr(cdr(a))))->type != OBJ_CONS)
 		return t;
 	f3 = car(car(cdr(cdr(cdr(a)))));
-	if (f3->type != OBJ_IDENTIFIER)
-		return t;
-	if (strcmp(f3->value.id, "in"))
+	if (f3->type != OBJ_IDENTIFIER || strcmp(f3->value.id, "in"))
 		return t;
 	if (cdr(car(cdr(cdr(a))))->type != OBJ_CONS)
 		return t;
@@ -264,10 +298,10 @@ sanitize(objectp a)
 	if (cdr(car(cdr(cdr(cdr(a)))))->type != OBJ_CONS)
 		return t;
 	if (!eqcons(cdtau, car(cdr(car(cdr(cdr(cdr(a))))))))
-	return t;
-	if(cdr(cdr(car(cdr(cdr(cdr(a))))))->type != OBJ_CONS)
-	return t;
-	if(!COMPSET(car(cdr(cdr(car(cdr(cdr(cdr(a)))))))))
+		return t;
+	if (cdr(cdr(car(cdr(cdr(cdr(a))))))->type != OBJ_CONS)
+		return t;
+	if (!COMPSET(car(cdr(cdr(car(cdr(cdr(cdr(a)))))))))
 		return t;
 	if (cdr(cdr(car(cdr(cdr(cdr(a))))))->type != OBJ_CONS)
 		return t;
@@ -280,14 +314,13 @@ objectp
 prodbyextension(objectp a, objectp b)
 {
 	objectp ret, cons, in, inb;
-	if (sanitize(a) == nil)
+	if (unsafe_sanitize(a) == nil)
 	{
-		fprintf(stderr, "; PROD: MALFORMED FIRST OPERAND: ");
+		fprintf(stderr, "; PROD: FIRST OPERAND:\n; ");
 		princ_object(stderr, a);
-		fprintf(stderr, "\n; FIRST ARGUMENT IS AN EXTENSION SET OF THE FORM"
-						" (AND (IN EXPR) (IN EXPR)) AND THIS LEAD TO LEFT ASSOCIATIVE LISTS.\n"
-						"; THIS IS NOT SUPPORTED.\n");
-		longjmp(je, 1);
+		fprintf(stderr, "\n; IS AN EXTENSION SET OF THE FORM: "
+						" (AND (IN (CAR TAU) EXTSET) (IN (CDR TAU) EXPR))\n"
+						"; THIS MAY LEAD TO LEFT ASSOCIATIVE LISTS WHICH ARE NOT SUPPORTED.\n");
 	}
 	in = new_object(OBJ_CONS);
 	in->vcar = new_object(OBJ_IDENTIFIER);

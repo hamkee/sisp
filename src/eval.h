@@ -48,6 +48,20 @@
 	: (p->type) == OBJ_NIL ? nil                        \
 						   : handsig("CDR: UNDEFINED"))
 
+
+#define ucar(p) (                                        \
+	(((p->type) == OBJ_CONS) || ((p->type) == OBJ_SET)) \
+		? p->value.c.car                                \
+	: (p->type) == OBJ_NIL ? nil                        \
+						   : null)
+
+#define ucdr(p) (                                        \
+	(((p->type) == OBJ_CONS) || ((p->type) == OBJ_SET)) \
+		? p->value.c.cdr                                \
+	: (p->type) == OBJ_NIL ? nil                        \
+						   : null)
+
+
 #define cddr(p) cdr(cdr(p))
 #define cadr(p) car(cdr(p))
 #define caar(p) car(car(p))
