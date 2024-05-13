@@ -25,6 +25,8 @@ int in_set(objectp x, objectp y)
 			continue;
 		switch (x->type)
 		{
+		case OBJ_NULL:
+			return 0;
 		case OBJ_NIL:
 		case OBJ_T:
 			if (x == p)
@@ -114,7 +116,7 @@ objectp capbyextension(const struct object *args)
 
 	return ret;
 }
-// (and (in tau p1) (not (in tau p2)))
+
 objectp diffbyextension(objectp p1, objectp p2)
 {
 	objectp ret;
@@ -219,8 +221,7 @@ objectp F_notin(const struct object *arg)
 	return (F_member(arg) == nil) ? t : nil;
 }
 
-
-objectp
+__inline__ static objectp
 unsafe_sanitize(objectp a)
 {
 	objectp f1, f2, f3;
@@ -258,58 +259,6 @@ unsafe_sanitize(objectp a)
 	return nil;
 }
 
-objectp
-sanitize(objectp a)
-{
-	objectp f1, f2, f3;
-	objectp ctau, cdtau;
-
-	ctau = new_object(OBJ_CONS);
-	ctau->vcar = new_object(OBJ_IDENTIFIER);
-	ctau->vcar->value.id = strdup("car");
-	ctau->vcdr = new_object(OBJ_CONS);
-	ctau->vcdr->vcar = tau;
-
-	cdtau = new_object(OBJ_CONS);
-	cdtau->vcar = new_object(OBJ_IDENTIFIER);
-	cdtau->vcar->value.id = strdup("cdr");
-	cdtau->vcdr = new_object(OBJ_CONS);
-	cdtau->vcdr->vcar = tau;
-
-	f1 = car(cdr(a));
-	if (f1->type != OBJ_IDENTIFIER || strcmp(f1->value.id, "and"))
-		return t;
-	if (car(cdr(cdr(a)))->type != OBJ_CONS)
-		return t;
-	f2 = car(car(cdr(cdr(a))));
-	if (f2->type != OBJ_IDENTIFIER || strcmp(f2->value.id, "in"))
-		return t;
-	if (cdr(cdr(cdr(a)))->type != OBJ_CONS)
-		return t;
-	if (car(cdr(cdr(cdr(a))))->type != OBJ_CONS)
-		return t;
-	f3 = car(car(cdr(cdr(cdr(a)))));
-	if (f3->type != OBJ_IDENTIFIER || strcmp(f3->value.id, "in"))
-		return t;
-	if (cdr(car(cdr(cdr(a))))->type != OBJ_CONS)
-		return t;
-	if (!eqcons(ctau, car(cdr(car(cdr(cdr(a)))))))
-		return t;
-	if (cdr(car(cdr(cdr(cdr(a)))))->type != OBJ_CONS)
-		return t;
-	if (!eqcons(cdtau, car(cdr(car(cdr(cdr(cdr(a))))))))
-		return t;
-	if (cdr(cdr(car(cdr(cdr(cdr(a))))))->type != OBJ_CONS)
-		return t;
-	if (!COMPSET(car(cdr(cdr(car(cdr(cdr(cdr(a)))))))))
-		return t;
-	if (cdr(cdr(car(cdr(cdr(cdr(a))))))->type != OBJ_CONS)
-		return t;
-	if (!COMPSET(car(cdr(cdr(car(cdr(cdr(cdr(a)))))))))
-		return t;
-
-	return nil;
-}
 objectp
 prodbyextension(objectp a, objectp b)
 {

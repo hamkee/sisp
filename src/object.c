@@ -97,7 +97,8 @@ void init_objects(void)
 	null = new_object(OBJ_NULL);
 	nil = new_object(OBJ_NIL);
 	t = new_object(OBJ_T);
-	tau = new_object(OBJ_TAU);
+	tau = (objectp)malloc(OBJ_SIZE);
+	tau->type = OBJ_TAU;
 	u = (objectp)malloc(OBJ_SIZE);
 
 	empty = new_object(OBJ_SET);
@@ -188,7 +189,7 @@ void set_object(objectp name, objectp value)
 		fprintf(stderr, "; SET OBJECT: NULL VALUE.");
 		longjmp(je, 1);
 	}
-	if (name->type != OBJ_IDENTIFIER || !strcmp(name->value.id, "null"))
+	if (name->type != OBJ_IDENTIFIER)
 	{
 		fprintf(stderr, "; SET OBJECT: NOT IDENTIFIER NAME.");
 		longjmp(je, 1);
@@ -197,7 +198,7 @@ void set_object(objectp name, objectp value)
 	for (p = setobjs_list; p != NULL; p = next)
 	{
 		next = p->next;
-		if (name->type == OBJ_IDENTIFIER &&
+		if (//name->type == OBJ_IDENTIFIER &&
 			!strcmp(name->value.id, p->name->value.id))
 		{
 			p->value = value;
@@ -263,7 +264,7 @@ void dump_object(int pool_number)
 	objectp q;
 	object_pairp p;
 	int i;
-	char *pool_name[] = {NULL, NULL, NULL, "ID", "CONS", "INT", "RAT", "STR", "SET"};
+	const char *pool_name[] = {NULL, NULL, NULL, "ID", "CONS", "INT", "RAT", "STR", "SET"};
 	if (pool_number == 0)
 	{
 		for (p = setobjs_list; p != NULL; p = p->next)

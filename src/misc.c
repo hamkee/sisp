@@ -144,6 +144,8 @@ eqset(objectp a, objectp b)
 						found = 1;
 					}
 					break;
+				case OBJ_NULL:
+					return nil;
 				default:
 					found = -1;
 					break;
@@ -173,6 +175,8 @@ eqcons(objectp a, objectp b)
 		return nil;
 	switch (a->type)
 	{
+	case OBJ_NULL:
+		return nil;
 	case OBJ_INTEGER:
 		return (a->value.i == b->value.i) ? t : nil;
 	case OBJ_RATIONAL:

@@ -270,6 +270,33 @@ F_ord(const struct object *args)
 }
 
 objectp
+F_nth(const struct object *args)
+{
+	objectp p, n;
+	register int i;
+	n = eval(car(args));
+	p = eval(car(cdr(args)));
+	i = 1L;
+	_ASSERTP(n->type == OBJ_INTEGER, NOT INTEGER INDEX, nth, n);
+	if (p == nil || p == empty)
+	{
+		return nil;
+	}
+	_ASSERTP(p->type == OBJ_CONS && !CONSP(p), NON CONS ARGUMENT, ORD, p);
+	if(n->value.i == 1)
+		return car(p);
+	do
+	{
+		i++;
+	} while (((p = cdr(p)) != nil) && i < n->value.i);
+	if(p == nil) {
+		fprintf(stderr, "; NTH: INDEX '%ld' OUT OF BOUNDS", n->value.i);
+		return null;
+	}
+	return car(p);
+}
+
+objectp
 F_cons(const struct object *args)
 {
 	objectp p;
@@ -872,6 +899,7 @@ const funcs functions[] = {
 	{"mod", F_mod, "INT_1 INT_2 -> INT"},
 	{"not", F_not, "BOOL -> BOOL"},
 	{"notin", F_notin, "SET -> [NIL|T]"},
+	{"nth", F_nth, "CONS -> X"},
 	{"numberp", F_numberp, "X -> [NIL|T]"},
 	{"or", F_or, "(BOOL_1 ... BOOL_n) -> [NIL|T]"},
 	{"ord", F_ord, "LIST -> NUM"},
