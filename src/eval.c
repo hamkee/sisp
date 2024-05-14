@@ -103,7 +103,6 @@ eval_func(objectp p, objectp args)
 	} while ((bind_list = cdr(bind_list)) != nil);
 	q = null;
 	b = cddr(p);
-
 	if (!setjmp(je))
 	{
 		do
@@ -190,20 +189,34 @@ eval_cons(const struct object *p)
 	return eval_func(func_name, cdr(p));
 }
 
+
 objectp
 eval_set(const struct object *p)
 {
-	objectp p1, r, first, prev;
+	objectp p1, r, first, prev, tmp = NULL;
 	first = prev = NULL;
 	r = nil;
-	if(p == empty) {
+	if (p == empty)
+	{
+
 		return empty;
 	}
-	if(COMPSET(p)) {
+	if (COMPSET(p))
+	{
 		p1 = car(p);
 		first = new_object(OBJ_SET);
 		first->value.c.car = tau;
 		first->value.c.cdr = sst(car(p), tau, cdr(p));
+		tmp = cdr(p);
+		do
+		{
+			if (car(tmp)->type == OBJ_IDENTIFIER)
+			{
+				r = try_object(car(tmp));
+				if (r != null)
+					first->value.c.cdr = sst(car(tmp), r, cdr(p));
+			}
+		} while ((tmp = cdr(tmp)) != nil);
 		return first;
 	}
 	do
@@ -213,7 +226,9 @@ eval_set(const struct object *p)
 		{
 			r = new_object(OBJ_SET);
 			r->value.c.car = p1;
-		} else {
+		}
+		else
+		{
 			continue;
 		}
 		if (first == NULL)

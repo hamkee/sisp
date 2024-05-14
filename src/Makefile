@@ -39,7 +39,8 @@ uninstall:
 	rm -f $(DESTDIR)$(bindir)/$(PROG)
 
 clean: 
-	-rm -f $(PROG) *.o *.*~
+	-rm -f $(PROG) *.*~ $(OBJS)
+
 
 distclean: clean 
 	-rm -f Makefile

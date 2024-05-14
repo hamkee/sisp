@@ -6,6 +6,16 @@
 #include "sisp.h"
 #include "eval.h"
 #include "extern.h"
+#include "funcs.h"
+#define ucar(p) (                                       \
+	(((p->type) == OBJ_CONS) || ((p->type) == OBJ_SET)) \
+		? p->value.c.car                                \
+		: null)
+
+#define ucdr(p) (                                       \
+	(((p->type) == OBJ_CONS) || ((p->type) == OBJ_SET)) \
+		? p->value.c.cdr                                \
+		: null)
 
 objectp eqcons(objectp, objectp);
 
@@ -288,4 +298,100 @@ sst(objectp b, objectp v, objectp body)
 	} while ((body = cdr(body)) != nil);
 
 	return first;
+}
+
+objectp
+set_to_array(objectp p)
+{
+	objectp tmp, p2, first, f, prev, pp, p1;
+	register int i, j, n;
+	objectp *arrayp;
+	first = prev = f = pp = NULL;
+	i = j = 0L;
+	tmp = p;
+	do
+	{
+		i++;
+	} while ((p = cdr(p)) != nil);
+	p = tmp;
+
+	n = 1 << i;
+	tmp = (void *)malloc(i * sizeof(objectp));
+	if(tmp == NULL)
+		return nil;
+	arrayp = (objectp *)tmp;
+	for (j = 0; j < i; j++)
+	{
+		arrayp[j] = car(p);
+		p = cdr(p);
+	}
+
+	tmp = new_object(OBJ_SET);
+	tmp->value.c.car = null;
+
+	for (int counter = 0; counter < n; counter++)
+	{
+		first = prev = NULL;
+		for (j = 0; j < i; j++)
+		{
+			if (counter & (1 << j))
+			{
+				p1 = new_object(OBJ_SET);
+				p1->value.c.car = arrayp[j];
+				if (first == NULL)
+					first = p1;
+				if (prev != NULL)
+					prev->vcdr = p1;
+				prev = p1;
+			}
+		}
+		p2 = new_object(OBJ_SET);
+		p2->value.c.car = (first == NULL) ? tmp : first;
+		if (f == NULL)
+			f = p2;
+		if (pp != NULL)
+			pp->vcdr = p2;
+		pp = p2;
+	}
+	free(arrayp);
+	return f;
+}
+
+int unsafe_sanitize(objectp a)
+{
+	objectp f1, f2, f3;
+	objectp ctau, cdtau;
+	ctau = new_object(OBJ_CONS);
+	ctau->vcar = new_object(OBJ_IDENTIFIER);
+	ctau->vcar->value.id = strdup("car");
+	ctau->vcdr = new_object(OBJ_CONS);
+	ctau->vcdr->vcar = tau;
+
+	cdtau = new_object(OBJ_CONS);
+	cdtau->vcar = new_object(OBJ_IDENTIFIER);
+	cdtau->vcar->value.id = strdup("cdr");
+	cdtau->vcdr = new_object(OBJ_CONS);
+	cdtau->vcdr->vcar = tau;
+
+	f1 = ucar(ucdr(a));
+	if (f1->type != OBJ_IDENTIFIER || strcmp(f1->value.id, "and"))
+		return 1;
+	f1 = ucdr(ucdr(a));
+	f2 = ucar(ucar(f1));
+	if (f2->type != OBJ_IDENTIFIER || strcmp(f2->value.id, "in"))
+		return 1;
+	f3 = ucar(ucar(ucdr(f1)));
+	if (f3->type != OBJ_IDENTIFIER || strcmp(f3->value.id, "in"))
+		return 1;
+	f3 = ucdr(ucar(ucdr(ucdr(a))));
+	f2 = ucdr(ucar(ucdr(ucdr(ucdr(a)))));
+	if (!eqcons(ctau, ucar(f3)))
+		return 1;
+	if (!eqcons(cdtau, ucar(f2)))
+		return 1;
+	if (!COMPSET(ucar(ucdr(f2))))
+		return 1;
+	if (!COMPSET(ucar(ucdr(f3))))
+		return 1;
+	return 0;
 }

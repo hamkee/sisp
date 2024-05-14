@@ -24,31 +24,31 @@ extern objectp F_setprod(const struct object *);
 extern objectp F_complement(const struct object *);
 extern objectp F_member(const struct object *);
 extern objectp F_notin(const struct object *);
-
+extern objectp F_powerset(const struct object *);
 
 extern objectp F_progn(const struct object *);
-#define FUNCS_N 66
+#define FUNCS_N 67
 extern const funcs functions[FUNCS_N];
 #define ISNUMERIC(x) ((x)->type == OBJ_INTEGER || (x)->type == OBJ_RATIONAL) \
 						 ? true                                              \
 						 : false
 
-#define CONSP(p) (              \
-	(p)->type == OBJ_CONS &&    \
-	cdr(p)->type != OBJ_CONS && \
-	cdr(p) != nil)
+#define CONSP(p) (              	\
+	(p)->type == OBJ_CONS &&    	\
+	cdr((p))->type != OBJ_CONS &&	\
+	cdr((p)) != nil)
 
-#define COMPSET(p) (			\
-	(p)->type == OBJ_SET &&		\
-	cdr(p)->type != OBJ_SET &&	\
-	cdr(p) != nil)
+#define COMPSET(p) (				\
+	(p)->type == OBJ_SET &&			\
+	cdr((p))->type != OBJ_SET &&	\
+	cdr((p)) != nil)
 
-#define __PROGN(EXPR)         \
-	do                        \
-	{                         \
-		if (cdr(EXPR) == nil) \
-			break;            \
-		eval(car(EXPR));      \
-	} while ((EXPR = cdr(EXPR)) != nil);
+#define __PROGN(EXPR)         	\
+	do                        	\
+	{                         	\
+		if (cdr((EXPR)) == nil) \
+			break;            	\
+		eval(car((EXPR)));      \
+	} while (((EXPR) = cdr((EXPR))) != nil);
 
 #endif

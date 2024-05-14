@@ -132,6 +132,7 @@ F_atom(const struct object *args)
 	case OBJ_INTEGER:
 	case OBJ_RATIONAL:
 	case OBJ_STRING:
+	case OBJ_TAU:
 		return t;
 	case OBJ_CONS:
 	case OBJ_SET:
@@ -283,13 +284,14 @@ F_nth(const struct object *args)
 		return nil;
 	}
 	_ASSERTP(p->type == OBJ_CONS && !CONSP(p), NON CONS ARGUMENT, ORD, p);
-	if(n->value.i == 1)
+	if (n->value.i == 1)
 		return car(p);
 	do
 	{
 		i++;
 	} while (((p = cdr(p)) != nil) && i < n->value.i);
-	if(p == nil) {
+	if (p == nil)
+	{
 		fprintf(stderr, "; NTH: INDEX '%ld' OUT OF BOUNDS", n->value.i);
 		return null;
 	}
@@ -497,6 +499,7 @@ F_eq(const struct object *args)
 		return nil;
 	switch (a->type)
 	{
+
 	case OBJ_IDENTIFIER:
 		return strcmp(a->value.id, b->value.id) == 0 ? t : nil;
 	case OBJ_STRING:
@@ -535,6 +538,10 @@ F_defun(const struct object *args)
 	{
 		body->vcdr->vcar = cdr(car(args));
 		body->vcdr->vcdr = cdr(args);
+	}
+	if (car(cdr(args))->type == OBJ_SET && COMPSET(car(cdr(args))))
+	{
+		args->vcdr->vcar = eval_set(car(cdr(args)));
 	}
 	set_object(car(car(args)), body);
 	return body;
@@ -865,6 +872,7 @@ const funcs functions[] = {
 	{"=", F_eq, "(NUM_1 NUM_2) -> [NIL|T]"},
 	{">", F_great, "(NUM_1 NUM_2) -> [NIL|T]"},
 	{">=", F_greateq, "(NUM_1 NUM_2) -> [NIL|T]"},
+	{"\\", F_diff, "SET SET -> SET"},
 	{"^", F_pow, "NUMBER INT -> NUMBER"},
 	{"and", F_and, "(BOOL_1 ... BOOL_n) -> [NIL|T]"},
 	{"append", F_union, "(LIST_1 ... LIST_k) -> LIST"},
@@ -905,11 +913,12 @@ const funcs functions[] = {
 	{"ord", F_ord, "LIST -> NUM"},
 	{"par", F_pair, "(LIST_1 LIST_2) -> LIST"},
 	{"pop", F_pop, "STACK -> X"},
+	{"pow", F_powerset, "SET->SET"},
 	{"print", F_print, "OBJECT -> NULL"},
 	{"prod", F_setprod, "SET SET -> SET"},
-	{"prog1", F_prog1, "(<= X_1 X_2)"},
-	{"prog2", F_prog2, "(<= X_1 X_2)"},
-	{"progn", F_progn, "(<= X_1 X_2)"},
+	{"prog1", F_prog1, "EXPR_1 ... EXPR_N -> EVAL(EXPR_1)"},
+	{"prog2", F_prog2, "EXPR_1 ... EXPR_N -> EVAL(EXPR_2)"},
+	{"progn", F_progn, "EXPR_1 ... EXPR_N -> EVAL(EXPR_N)"},
 	{"push", F_push, "(X STACK) -> STACK"},
 	{"quit", F_quit, ""},
 	{"quote", F_quote, "X -> IDENTIFIER"},

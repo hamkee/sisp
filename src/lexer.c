@@ -234,6 +234,7 @@ int gettoken(void)
 		case 'y':
 		case 'z':
 		case '^':
+		case '\\':
 			p = token_buffer;
 			do
 			{

@@ -222,7 +222,7 @@ try_object(const struct object *name)
 {
 	object_pairp p;
 
-	if (name == null)
+	if (name == null || name == NULL)
 		return null;
 	for (p = setobjs_list; p != NULL; p = p->next)
 		if (!strcmp(name->value.id, p->name->value.id))

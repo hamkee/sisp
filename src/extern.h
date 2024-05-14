@@ -39,6 +39,7 @@ extern int gettoken(void);
 extern void clean_buffers(void);
 extern void clean_objects(void);
 /* funcs.c */
+
 #define _EXTERN_H
 
 #endif

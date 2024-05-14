@@ -220,56 +220,18 @@ objectp F_notin(const struct object *arg)
 {
 	return (F_member(arg) == nil) ? t : nil;
 }
-
-__inline__ static objectp
-unsafe_sanitize(objectp a)
-{
-	objectp f1, f2, f3;
-	objectp ctau, cdtau;
-
-	ctau = new_object(OBJ_CONS);
-	ctau->vcar = new_object(OBJ_IDENTIFIER);
-	ctau->vcar->value.id = strdup("car");
-	ctau->vcdr = new_object(OBJ_CONS);
-	ctau->vcdr->vcar = tau;
-
-	cdtau = new_object(OBJ_CONS);
-	cdtau->vcar = new_object(OBJ_IDENTIFIER);
-	cdtau->vcar->value.id = strdup("cdr");
-	cdtau->vcdr = new_object(OBJ_CONS);
-	cdtau->vcdr->vcar = tau;
-
-	f1 = ucar(ucdr(a));
-	if (f1->type != OBJ_IDENTIFIER || strcmp(f1->value.id, "and"))
-		return t;
-	f2 = ucar(ucar(ucdr(ucdr(a))));
-	if (f2->type != OBJ_IDENTIFIER || strcmp(f2->value.id, "in"))
-		return t;
-	f3 = ucar(ucar(ucdr(ucdr(ucdr(a)))));
-	if (f3->type != OBJ_IDENTIFIER || strcmp(f3->value.id, "in"))
-		return t;
-	if (!eqcons(ctau, ucar(ucdr(ucar(ucdr(ucdr(a)))))))
-		return t;
-	if (!eqcons(cdtau, ucar(ucdr(ucar(ucdr(ucdr(ucdr(a))))))))
-		return t;
-	if (!COMPSET(ucar(ucdr(ucdr(ucar(ucdr(ucdr(ucdr(a)))))))))
-		return t;
-	if (!COMPSET(ucar(ucdr(ucdr(ucar(ucdr(ucdr(ucdr(a)))))))))
-		return t;
-	return nil;
-}
-
+// function that takes 
 objectp
 prodbyextension(objectp a, objectp b)
 {
 	objectp ret, cons, in, inb;
-	if (unsafe_sanitize(a) == nil)
+	if (unsafe_sanitize(a) == 0)
 	{
 		fprintf(stderr, "; PROD: FIRST OPERAND:\n; ");
 		princ_object(stderr, a);
-		fprintf(stderr, "\n; IS AN EXTENSION SET OF THE FORM: "
-						" (AND (IN (CAR TAU) EXTSET) (IN (CDR TAU) EXPR))\n"
-						"; THIS MAY LEAD TO LEFT ASSOCIATIVE LISTS WHICH ARE NOT SUPPORTED.\n");
+		fprintf(stderr, "\n; CONTAINS AN EXTENSION SET OF THE FORM: "
+						" (and (in (car tau) {tau : ...}) (in (cdr tau) {tau : ...}))\n"
+						"; THIS MAY LEAD TO LEFT ASSOCIATIVE LISTS.\n");
 	}
 	in = new_object(OBJ_CONS);
 	in->vcar = new_object(OBJ_IDENTIFIER);
@@ -313,11 +275,6 @@ prodbyextension(objectp a, objectp b)
 	ret->vcdr->vcdr->vcdr = new_object(OBJ_CONS);
 	ret->vcdr->vcdr->vcdr->vcar = inb;
 
-	// ret->vcdr->vcdr->vcar = cons;
-	// ret->vcdr->vcdr->vcdr = new_object(OBJ_CONS);
-	// ret->vcdr->vcdr->vcdr->vcar = in;
-	// ret->vcdr->vcdr->vcdr->vcdr = new_object(OBJ_CONS);
-	// ret->vcdr->vcdr->vcdr->vcdr->vcar = inb;
 	return ret;
 }
 objectp
@@ -359,12 +316,35 @@ flatten(objectp p)
 	return first;
 }
 objectp
+F_powerset(const struct object *arg)
+{
+	objectp p, ret;
+	p = eval(car(arg));
+	_ASSERTP(p->type == OBJ_SET, NOT SET, POW, p);
+	if (COMPSET(p))
+	{
+		ret = new_object(OBJ_SET);
+		ret->vcar = tau;
+		ret->vcdr = new_object(OBJ_CONS);
+		ret->vcdr->vcar = new_object(OBJ_IDENTIFIER);
+		ret->vcdr->vcar->value.id = strdup("subset");
+		ret->vcdr->vcdr = new_object(OBJ_CONS);
+		ret->vcdr->vcdr->vcar = tau;
+		ret->vcdr->vcdr->vcdr = new_object(OBJ_CONS);
+		ret->vcdr->vcdr->vcdr->vcar = p;
+		return ret;
+	}
+	ret = set_to_array(p);
+	return ret;
+}
+objectp
 F_setprod(const struct object *args)
 {
 	objectp b, a, tmp;
 	objectp first = NULL, prev = NULL, p1, p2;
 	a = eval(car(args));
 	b = eval(car(cdr(args)));
+
 	_ASSERTP(a->type == OBJ_SET, NOT SET, PROD, a);
 	_ASSERTP(b->type == OBJ_SET, NOT SET, PROD, b);
 	if (COMPSET(a) && COMPSET(b))
@@ -586,7 +566,7 @@ F_diff(const struct object *args)
 
 	} while ((arg1 = cdr(arg1)) != nil);
 
-	return first == NULL ? nil : first;
+	return first == NULL ? empty : first;
 }
 objectp
 F_complement(const struct object *args)

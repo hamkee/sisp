@@ -108,10 +108,10 @@ parse_object(int havetoken)
 	case '{':
 		p = parse_set();
 		break;
-	case '\'':
+	case '\\':
 		p = new_object(OBJ_CONS);
 		p->value.c.car = new_object(OBJ_IDENTIFIER);
-		p->value.c.car->value.id = strdup("quote");
+		p->value.c.car->value.id = strdup("diff");
 		p->value.c.cdr = new_object(OBJ_CONS);
 		p->value.c.cdr->value.c.car = parse_object(0);
 		break;

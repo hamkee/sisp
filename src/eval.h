@@ -13,53 +13,40 @@
 	} while (0)
 
 #define eval(p) (                                                              \
-	(p->type) == OBJ_T ? t : (p->type) == OBJ_NIL	   ? nil                   \
-						 : (p->type) == OBJ_TAU		   ? tau                   \
-						 : (p->type) == OBJ_NULL	   ? handsig("EVAL ERROR") \
-						 : (p->type) == OBJ_INTEGER	   ? (p)                   \
-						 : (p->type) == OBJ_RATIONAL   ? eval_rat((p))         \
-						 : (p->type) == OBJ_IDENTIFIER ? get_object((p))       \
-						 : (p->type) == OBJ_STRING	   ? (p)                   \
-						 : (p->type) == OBJ_CONS	   ? eval_cons((p))        \
-						 : (p->type) == OBJ_SET		   ? eval_set((p))         \
+	((p)->type) == OBJ_T ? t : ((p)->type) == OBJ_NIL	   ? nil                   \
+						 : ((p)->type) == OBJ_TAU		   ? tau                   \
+						 : ((p)->type) == OBJ_NULL	   ? handsig("EVAL ERROR") \
+						 : ((p)->type) == OBJ_INTEGER	   ? (p)                   \
+						 : ((p)->type) == OBJ_RATIONAL   ? eval_rat((p))         \
+						 : ((p)->type) == OBJ_IDENTIFIER ? get_object((p))       \
+						 : ((p)->type) == OBJ_STRING	   ? (p)                   \
+						 : ((p)->type) == OBJ_CONS	   ? eval_cons((p))        \
+						 : ((p)->type) == OBJ_SET		   ? eval_set((p))         \
 													   : (p))
 
 #define try_eval(p) (                                                    \
-	(p->type) == OBJ_T ? t : (p->type) == OBJ_NIL	   ? nil             \
-						 : (p->type) == OBJ_TAU		   ? tau             \
-						 : (p->type) == OBJ_NULL	   ? null            \
-						 : (p->type) == OBJ_INTEGER	   ? (p)             \
-						 : (p->type) == OBJ_RATIONAL   ? eval_rat((p))   \
-						 : (p->type) == OBJ_IDENTIFIER ? try_object((p)) \
-						 : (p->type) == OBJ_STRING	   ? (p)             \
-						 : (p->type) == OBJ_CONS	   ? eval_cons((p))  \
-						 : (p->type) == OBJ_SET		   ? eval_set((p))   \
+	((p)->type) == OBJ_T ? t : ((p)->type) == OBJ_NIL	   ? nil             \
+						 : ((p)->type) == OBJ_TAU		   ? tau             \
+						 : ((p)->type) == OBJ_NULL	   ? null            \
+						 : ((p)->type) == OBJ_INTEGER	   ? (p)             \
+						 : ((p)->type) == OBJ_RATIONAL   ? eval_rat((p))   \
+						 : ((p)->type) == OBJ_IDENTIFIER ? try_object((p)) \
+						 : ((p)->type) == OBJ_STRING	   ? (p)             \
+						 : ((p)->type) == OBJ_CONS	   ? eval_cons((p))  \
+						 : ((p)->type) == OBJ_SET		   ? eval_set((p))   \
 													   : (p))
 
 #define car(p) (                                        \
-	(((p->type) == OBJ_CONS) || ((p->type) == OBJ_SET)) \
-		? p->value.c.car                                \
-	: (p->type) == OBJ_NIL ? nil                        \
+	((((p)->type) == OBJ_CONS) || (((p)->type) == OBJ_SET)) \
+		? (p)->value.c.car                                \
+	: ((p)->type) == OBJ_NIL ? nil                        \
 						   : handsig("CAR: UNDEFINED"))
 
 #define cdr(p) (                                        \
-	(((p->type) == OBJ_CONS) || ((p->type) == OBJ_SET)) \
-		? p->value.c.cdr                                \
-	: (p->type) == OBJ_NIL ? nil                        \
+	((((p)->type) == OBJ_CONS) || (((p)->type) == OBJ_SET)) \
+		? (p)->value.c.cdr                                \
+	: ((p)->type) == OBJ_NIL ? nil                        \
 						   : handsig("CDR: UNDEFINED"))
-
-
-#define ucar(p) (                                        \
-	(((p->type) == OBJ_CONS) || ((p->type) == OBJ_SET)) \
-		? p->value.c.car                                \
-	: (p->type) == OBJ_NIL ? nil                        \
-						   : null)
-
-#define ucdr(p) (                                        \
-	(((p->type) == OBJ_CONS) || ((p->type) == OBJ_SET)) \
-		? p->value.c.cdr                                \
-	: (p->type) == OBJ_NIL ? nil                        \
-						   : null)
 
 
 #define cddr(p) cdr(cdr(p))
