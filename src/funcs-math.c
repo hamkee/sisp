@@ -287,44 +287,68 @@ F_less(const struct object *args)
 objectp
 F_and(const struct object *args)
 {
-	objectp p1;
-	do
-	{
-		p1 = eval(car(args));
-		if (p1 == nil)
-			return nil;
-	} while ((args = cdr(args)) != nil);
-	return p1;
+    objectp p1;
+    do
+    {
+        p1 = eval(car(args));
+        _ASSERTP(ISBOOL(p1), NOT BOOL EXPRESSION, AND, p1);
+        if (p1 == nil)
+            return nil;
+    } while ((args = cdr(args)) != nil);
+    return p1;
 }
 
 objectp
 F_or(const struct object *args)
 {
-	objectp p1;
-	do
-	{
-		p1 = eval(car(args));
-		if (p1 != nil)
-			return p1;
-	} while ((args = cdr(args)) != nil);
-	return nil;
+    objectp p1;
+    do
+    {
+        p1 = eval(car(args));
+        _ASSERTP(ISBOOL(p1), NOT BOOL EXPRESSION, OR, p1);
+
+        if (p1 != nil)
+            return p1;
+    } while ((args = cdr(args)) != nil);
+    return nil;
 }
 
 objectp
 F_not(const struct object *args)
 {
-	return eval(car(args)) != nil ? nil : t;
+    objectp p1;
+    p1 = eval(car(args));
+    _ASSERTP(ISBOOL(p1), NOT BOOL EXPRESSION, NOT, p1);
+    return p1 == t ? nil : t;
 }
 
 objectp
 F_xor(const struct object *args)
 {
-	objectp first;
-	first = eval(car(args));
-	do
-	{
-		if (eval(car(args)) != first)
-			return nil;
-	} while ((args = cdr(args)) != nil);
-	return t;
+    objectp r, p1;
+    r = eval(car(args));
+    _ASSERTP(ISBOOL(r), NOT BOOL EXPRESSION, XOR, r);
+
+    args = cdr(args);
+    do
+    {
+        p1 = eval(car(args));
+        _ASSERTP(ISBOOL(p1), NOT BOOL EXPRESSION, XOR, p1);
+        r = (p1 != r) ? t : nil;
+    } while ((args = cdr(args)) != nil);
+    return r;
+}
+
+objectp
+F_imply(const struct object *args)
+{
+    objectp a, b;
+    a = eval(car(args));
+    b = eval(car(cdr(args)));
+    _ASSERTP(ISBOOL(a), NOT BOOL EXPRESSION, = >, a);
+    _ASSERTP(ISBOOL(b), NOT BOOL EXPRESSION, = >, b);
+
+    if (a == t && b == nil)
+        return nil;
+    return t;
 }

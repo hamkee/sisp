@@ -126,6 +126,7 @@ eqset(objectp a, objectp b)
 					break;
 				case OBJ_T:
 				case OBJ_NIL:
+				case OBJ_TAU:
 					found = 1;
 					break;
 				case OBJ_IDENTIFIER:
@@ -196,6 +197,7 @@ eqcons(objectp a, objectp b)
 				   : nil;
 	case OBJ_T:
 	case OBJ_NIL:
+	case OBJ_TAU:
 		return t;
 	case OBJ_IDENTIFIER:
 		return strcmp(a->value.id, b->value.id) == 0 ? t : nil;

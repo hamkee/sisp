@@ -29,6 +29,7 @@ int in_set(objectp x, objectp y)
 			return 0;
 		case OBJ_NIL:
 		case OBJ_T:
+		case OBJ_TAU:
 			if (x == p)
 				return 1;
 			break;
@@ -63,7 +64,8 @@ int in_set(objectp x, objectp y)
 	} while ((y = cdr(y)) != nil);
 	return 0;
 }
-objectp
+
+__inline__ static objectp
 unionbyextension(const struct object *args)
 {
 	objectp p, p1, first, prev, ret;
@@ -90,7 +92,9 @@ unionbyextension(const struct object *args)
 
 	return ret;
 }
-objectp capbyextension(const struct object *args)
+
+__inline__ static objectp 
+capbyextension(const struct object *args)
 {
 	objectp p, p1, first, prev, ret;
 	first = prev = NULL;
@@ -117,7 +121,8 @@ objectp capbyextension(const struct object *args)
 	return ret;
 }
 
-objectp diffbyextension(objectp p1, objectp p2)
+__inline__ static objectp 
+diffbyextension(objectp p1, objectp p2)
 {
 	objectp ret;
 
@@ -138,6 +143,171 @@ objectp diffbyextension(objectp p1, objectp p2)
 	return ret;
 }
 
+__inline__ static objectp symdiffbyextension(objectp p1, objectp p2)
+{
+	objectp ret;
+
+	ret = new_object(OBJ_SET);
+	ret->value.c.car = tau;
+	ret->value.c.cdr = new_object(OBJ_CONS);
+	ret->vcdr->vcar = new_object(OBJ_IDENTIFIER);
+	ret->vcdr->vcar->value.id = strdup("xor");
+	ret->vcdr->vcdr = new_object(OBJ_CONS);
+	ret->vcdr->vcdr->vcar = cdr(p1);
+	ret->vcdr->vcdr->vcdr = new_object(OBJ_CONS);
+	ret->vcdr->vcdr->vcdr->vcar = cdr(p2);
+
+	return ret;
+}
+objectp
+F_symdiff(const struct object *args)
+{
+	objectp arg1, arg2, tmp, tmp1, c;
+	objectp first = NULL, prev = NULL, p1;
+	int found = 0;
+	arg1 = eval(car(args));
+	arg2 = eval(cadr(args));
+	_ASSERTP((arg1->type == OBJ_CONS && arg2->type == OBJ_CONS) ||
+				 (arg1->type == OBJ_SET && arg2->type == OBJ_SET),
+			 NOT CONS, DIFF, args);
+	if (COMPSET(arg1))
+		return symdiffbyextension(arg1, arg2);
+	tmp1 = arg1;
+	do
+	{
+		tmp = arg2;
+		found = 0;
+		do
+		{
+			if (arg1->vcar->type == tmp->vcar->type)
+			{
+				switch (arg1->vcar->type)
+				{
+				case OBJ_INTEGER:
+					if (arg1->vcar->value.i == tmp->vcar->value.i)
+					{
+						found = 1;
+					}
+					break;
+				case OBJ_RATIONAL:
+					if (arg1->vcar->value.r.n == tmp->vcar->value.r.n &&
+						arg1->vcar->value.r.d == tmp->vcar->value.r.d)
+					{
+						found = 1;
+					}
+					break;
+				case OBJ_T:
+				case OBJ_NIL:
+				case OBJ_TAU:
+					found = 1;
+					break;
+				case OBJ_IDENTIFIER:
+					if (strcmp(arg1->vcar->value.id, tmp->vcar->value.id) == 0)
+					{
+						found = 1;
+					}
+					break;
+				case OBJ_STRING:
+					if (strcmp(arg1->vcar->value.s.str, tmp->vcar->value.s.str) == 0)
+					{
+						found = 1;
+					}
+					break;
+				case OBJ_CONS:
+				case OBJ_SET:
+					c = (tmp->vcar->type == OBJ_SET) ? eqset(arg1->vcar, tmp->vcar) : eqcons(arg1->vcar, tmp->vcar);
+					if (c == t)
+					{
+						found = 1;
+					}
+					break;
+				default:
+					found = 0;
+					break;
+				}
+			}
+		} while ((tmp = cdr(tmp)) != nil);
+		if (found == 0)
+		{
+			p1 = new_object(arg1->type);
+			p1->vcar = arg1->vcar;
+			if (first == NULL)
+				first = p1;
+			if (prev != NULL)
+				prev->vcdr = p1;
+			prev = p1;
+		}
+
+	} while ((arg1 = cdr(arg1)) != nil);
+	arg1 = tmp1;
+	do
+	{
+		tmp = arg1;
+		found = 0;
+		do
+		{
+			if (arg2->vcar->type == tmp->vcar->type)
+			{
+				switch (arg2->vcar->type)
+				{
+				case OBJ_INTEGER:
+					if (arg2->vcar->value.i == tmp->vcar->value.i)
+					{
+						found = 1;
+					}
+					break;
+				case OBJ_RATIONAL:
+					if (arg2->vcar->value.r.n == tmp->vcar->value.r.n &&
+						arg2->vcar->value.r.d == tmp->vcar->value.r.d)
+					{
+						found = 1;
+					}
+					break;
+				case OBJ_T:
+				case OBJ_NIL:
+				case OBJ_TAU:
+					found = 1;
+					break;
+				case OBJ_IDENTIFIER:
+					if (strcmp(arg2->vcar->value.id, tmp->vcar->value.id) == 0)
+					{
+						found = 1;
+					}
+					break;
+				case OBJ_STRING:
+					if (strcmp(arg2->vcar->value.s.str, tmp->vcar->value.s.str) == 0)
+					{
+						found = 1;
+					}
+					break;
+				case OBJ_CONS:
+				case OBJ_SET:
+					c = (tmp->vcar->type == OBJ_SET) ? eqset(arg2->vcar, tmp->vcar) : eqcons(arg1->vcar, tmp->vcar);
+					if (c == t)
+					{
+						found = 1;
+					}
+					break;
+				default:
+					found = 0;
+					break;
+				}
+			}
+		} while ((tmp = cdr(tmp)) != nil);
+		if (found == 0)
+		{
+			p1 = new_object(arg2->type);
+			p1->vcar = arg2->vcar;
+			if (first == NULL)
+				first = p1;
+			if (prev != NULL)
+				prev->vcdr = p1;
+			prev = p1;
+		}
+
+	} while ((arg2 = cdr(arg2)) != nil);
+	return first == NULL ? empty : first;
+}
 objectp
 F_union(const struct object *args)
 {
@@ -216,12 +386,13 @@ F_subset(const struct object *args)
 	}
 	return t;
 }
+
 objectp F_notin(const struct object *arg)
 {
 	return (F_member(arg) == nil) ? t : nil;
 }
-// function that takes 
-objectp
+
+__inline__ static objectp
 prodbyextension(objectp a, objectp b)
 {
 	objectp ret, cons, in, inb;
@@ -277,7 +448,7 @@ prodbyextension(objectp a, objectp b)
 
 	return ret;
 }
-objectp
+__inline__ static objectp
 flatten(objectp p)
 {
 	objectp first = NULL, prev = NULL, p1, p2, p3;
@@ -428,6 +599,7 @@ F_cap(const struct object *args)
 					break;
 				case OBJ_T:
 				case OBJ_NIL:
+				case OBJ_TAU:
 					p1 = new_object(type);
 					p1->vcar = arg1->vcar;
 					if (first == NULL)
@@ -525,6 +697,7 @@ F_diff(const struct object *args)
 					break;
 				case OBJ_T:
 				case OBJ_NIL:
+				case OBJ_TAU:
 					found = 1;
 					break;
 				case OBJ_IDENTIFIER:
@@ -661,6 +834,10 @@ F_member(const struct object *args)
 			break;
 		case OBJ_NIL:
 			if (x->type == OBJ_NIL)
+				return t;
+			break;
+		case OBJ_TAU:
+			if (x->type == OBJ_TAU)
 				return t;
 			break;
 		case OBJ_INTEGER:

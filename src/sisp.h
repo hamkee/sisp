@@ -12,6 +12,7 @@ typedef enum
   false,
   true
 } bool;
+
 typedef enum
 {
   OBJ_NULL,

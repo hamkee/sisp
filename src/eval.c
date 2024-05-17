@@ -9,7 +9,7 @@
 #include "extern.h"
 #include "misc.h"
 
-static int
+__inline__ static int
 compar(const void *p1, const void *p2)
 {
 	return strcmp(((const funcs *)p1)->name, ((const funcs *)p2)->name);

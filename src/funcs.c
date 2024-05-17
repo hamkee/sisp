@@ -77,7 +77,7 @@ F_substr(const struct object *args)
 	result = new_object(OBJ_STRING);
 	if (arg1->value.i > arg3->value.s.len)
 	{
-		fprintf(stderr, "; INDEX OUT OF BOUNDS\n");
+		fprintf(stderr, "; SUBSTR: INDEX OUT OF BOUNDS %ld\n", arg1->value.i);
 		return nil;
 	}
 	if (arg1->value.i + arg2->value.i > arg3->value.s.len)
@@ -87,7 +87,7 @@ F_substr(const struct object *args)
 	result->value.s.str = (char *)malloc(offset * sizeof(char));
 	if (result->value.s.str == NULL)
 	{
-		fprintf(stderr, "; UNABLE TO ALLOCATE MEMORY\n");
+		fprintf(stderr, "; SUBSTR: UNABLE TO ALLOCATE MEMORY\n");
 		return nil;
 	}
 	strncpy(result->value.s.str, arg3->value.s.str + arg1->value.i, offset);
@@ -167,7 +167,7 @@ F_loadfile(const struct object *args)
 	f_name = malloc(strlen(p->value.id) + 4);
 	if (f_name == NULL)
 	{
-		fprintf(stderr, "allocating memory\n");
+		fprintf(stderr, "; LOADFILE: ALLOCATING MEMORY\n");
 		return nil;
 	}
 	strncpy(f_name, p->value.id, strlen(p->value.id));
@@ -855,6 +855,7 @@ F_print(const struct object *arg)
 	} while ((arg = cdr(arg)) != nil);
 	return null;
 }
+
 objectp
 F_numberp(const struct object *arg)
 {
@@ -870,6 +871,7 @@ const funcs functions[] = {
 	{"<", F_less, "(NUM_1 NUM_2) -> [NIL|T]"},
 	{"<=", F_lesseq, "(NUM_1 NUM_2) -> [NIL|T]"},
 	{"=", F_eq, "(NUM_1 NUM_2) -> [NIL|T]"},
+	{"=>", F_imply, "EXPR EXPR -> [NIL|T]"},
 	{">", F_great, "(NUM_1 NUM_2) -> [NIL|T]"},
 	{">=", F_greateq, "(NUM_1 NUM_2) -> [NIL|T]"},
 	{"\\", F_diff, "SET SET -> SET"},
@@ -927,6 +929,7 @@ const funcs functions[] = {
 	{"subset", F_subset, "(SET SET) -> [NIL|T]"},
 	{"subst", F_subst, "(X Y (X_1 ... X_N)) -> LIST"},
 	{"substr", F_substr, "(NUM_1 NUM_2 STRING) -> STRING"},
+	{"symdiff", F_symdiff, "SET SET -> SET"},
 	{"typeof", F_typeof, "X -> T"},
 	{"undef", F_undef, "VAR -> [NIL|T]"},
 	{"union", F_union, "SET SET -> SET"},
