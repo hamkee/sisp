@@ -13,57 +13,6 @@
 #include "funcs.h"
 #include "eval.h"
 #include "misc.h"
-int in_set(objectp x, objectp y)
-{
-	objectp p;
-	if (y == nil || y == NULL)
-		return 0;
-	do
-	{
-		p = car(y);
-		if (x->type != p->type)
-			continue;
-		switch (x->type)
-		{
-		case OBJ_NULL:
-			return 0;
-		case OBJ_NIL:
-		case OBJ_T:
-		case OBJ_TAU:
-			if (x == p)
-				return 1;
-			break;
-		case OBJ_IDENTIFIER:
-			if (!strcmp(x->value.id, p->value.id))
-				return 1;
-			break;
-		case OBJ_STRING:
-			if (!strcmp(x->value.s.str, p->value.s.str))
-				return 1;
-			break;
-		case OBJ_INTEGER:
-			if (x->value.i == p->value.i)
-				return 1;
-			break;
-		case OBJ_RATIONAL:
-			if (x->value.r.d == p->value.r.d &&
-				x->value.r.n == p->value.r.n)
-				return 1;
-			break;
-		case OBJ_CONS:
-			if (eqcons(x, p) == t)
-				return 1;
-			break;
-		case OBJ_SET:
-			if (eqset(x, p) == t)
-				return 1;
-			break;
-		default:
-			break;
-		}
-	} while ((y = cdr(y)) != nil);
-	return 0;
-}
 
 __inline__ static objectp
 unionbyextension(const struct object *args)
@@ -462,7 +411,6 @@ flatten(objectp p)
 			do
 			{
 				p2 = car(p1);
-
 				p3 = new_object(OBJ_CONS);
 				p3->value.c.car = p2;
 				if (first == NULL)
@@ -656,7 +604,7 @@ F_cap(const struct object *args)
 		} while ((tmp = cdr(tmp)) != nil);
 	} while ((arg1 = cdr(arg1)) != nil);
 
-	return first;
+	return first == NULL ? empty : first;
 }
 
 objectp

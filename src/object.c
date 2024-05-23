@@ -21,6 +21,7 @@ objectp tau;
 objectp empty;
 static object_pairp setobjs_list = NULL;
 static unsigned int gc_id = 0;
+func_cache function_cache[CACHE_SIZE];
 
 __inline__ objectp
 new_object(a_type type)
@@ -114,7 +115,11 @@ void init_objects(void)
 	empty->vcdr->vcdr->vcar->vcdr->vcar = tau;
 	empty->vcdr->vcdr->vcar->vcdr->vcdr = new_object(OBJ_CONS);
 	empty->vcdr->vcdr->vcar->vcdr->vcdr->vcar = tau;
-
+	for (i = 0; i < CACHE_SIZE; i++)
+	{
+		function_cache[i].name = NULL;
+		function_cache[i].func = NULL;
+	}
 	for (i = 3; i <= 8; i++)
 	{
 		pool[i].head.u = NULL;
@@ -163,7 +168,6 @@ void remove_object(objectp name)
 {
 	object_pairp p, prev, next;
 	prev = NULL;
-
 	for (p = setobjs_list; p != NULL; prev = p, p = next)
 	{
 		next = p->next;
@@ -194,13 +198,32 @@ void set_object(objectp name, objectp value)
 		fprintf(stderr, "; SET OBJECT: NOT IDENTIFIER NAME.");
 		longjmp(je, 1);
 	}
-
+	// circular definition set by comprehension
+	if (value->type == OBJ_SET &&
+		value->value.c.cdr->type != OBJ_SET &&
+		value->value.c.cdr != nil)
+	{
+		if (in_set(name, value->value.c.cdr))
+		{
+			fprintf(stderr, "; SET OBJECT: VALUE CANNOT CONTAIN NAME.");
+			longjmp(je, 1);
+		}
+	}
 	for (p = setobjs_list; p != NULL; p = next)
 	{
 		next = p->next;
-		if (//name->type == OBJ_IDENTIFIER &&
-			!strcmp(name->value.id, p->name->value.id))
+		if (!strcmp(name->value.id, p->name->value.id))
 		{
+			for (int i = 0; i < CACHE_SIZE; i++)
+			{
+				if (function_cache[i].name != NULL &&
+					!strcmp(name->value.id, function_cache[i].name))
+				{
+					free(function_cache[i].name);
+					function_cache[i].name = NULL;
+					function_cache[i].func = NULL;
+				}
+			}
 			p->value = value;
 			return;
 		}
@@ -267,6 +290,15 @@ void dump_object(int pool_number)
 	const char *pool_name[] = {NULL, NULL, NULL, "ID", "CONS", "INT", "RAT", "STR", "SET"};
 	if (pool_number == 0)
 	{
+		printf("FUNCTION CACHE:\n");
+		for(unsigned int j = 0; j <CACHE_SIZE; j++) {
+			if(function_cache[j].name != NULL) {
+				printf("%s: ", function_cache[j].name);
+				princ_object(stdout, function_cache[j].func);
+				printf("\n");
+			}
+		}
+		printf("------------\n");
 		for (p = setobjs_list; p != NULL; p = p->next)
 		{
 			princ_object(stdout, p->name);
@@ -371,10 +403,6 @@ void garbage_collect(void)
 			prev = p;
 			if (p->gc != gc_id && p != null)
 			{
-				// if (prev == NULL) {
-				// 	printf("not redundant\n");
-				// 	pool[i].head.u = next;
-				// } else
 				prev->next = next;
 				p->next = pool[i].head.f;
 				pool[i].head.f = p;

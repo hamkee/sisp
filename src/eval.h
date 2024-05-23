@@ -58,6 +58,7 @@ objectp eval_rat(const struct object *);
 objectp eval_cons(const struct object *);
 objectp eval_set(const struct object *);
 int in_set(objectp, objectp);
+
 #define _EVAL_H
 
 #endif

@@ -17,6 +17,7 @@
 		XUNGETC(c);                                 \
 		while (((c = XGETC()) == '\n') && c != EOF) \
 			;                                       \
+		fflush(stdout);								\
 		memset(token_buffer, 0, BUFFER_SIZE);       \
 		longjmp(jl, 1);                             \
 	} while (0)

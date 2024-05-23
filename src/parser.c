@@ -11,7 +11,7 @@ static int thistoken;
 __inline__ static objectp parse_form(void)
 {
 	objectp p, first, prev;
-	first = prev = (objectp)NULL;
+	first = prev = NULL;
 
 	while ((thistoken = gettoken()) != ')' && thistoken != EOF)
 	{
@@ -40,7 +40,7 @@ __inline__ static objectp parse_form(void)
 __inline__ static objectp parse_set(void)
 {
 	objectp p, first, prev;
-	first = prev = (objectp)NULL;
+	first = prev = NULL;
 
 	while ((thistoken = gettoken()) != '}' && thistoken != EOF)
 	{
@@ -99,6 +99,13 @@ parse_object(int havetoken)
 		p = new_object(OBJ_CONS);
 		p->value.c.car = new_object(OBJ_IDENTIFIER);
 		p->value.c.car->value.id = strdup("comma");
+		p->value.c.cdr = new_object(OBJ_CONS);
+		p->value.c.cdr->value.c.car = parse_object(0);
+		break;
+	case '\'':
+		p = new_object(OBJ_CONS);
+		p->value.c.car = new_object(OBJ_IDENTIFIER);
+		p->value.c.car->value.id = strdup("quote");
 		p->value.c.cdr = new_object(OBJ_CONS);
 		p->value.c.cdr->value.c.car = parse_object(0);
 		break;

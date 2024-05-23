@@ -37,13 +37,13 @@ void recycle_pool(a_type type)
 	objectp p;
 
 	if (type == OBJ_IDENTIFIER)
-		chunk_size = 32;
-	else if (type == OBJ_CONS)
-		chunk_size = 128;
-	else if (type == OBJ_SET)
-		chunk_size = 64;
-	else
 		chunk_size = 16;
+	else if (type == OBJ_CONS)
+		chunk_size = 64;
+	else if (type == OBJ_SET)
+		chunk_size = 32;
+	else
+		chunk_size = 8;
 	if (pool[type].head.f == NULL)
 		return;
 	while (pool[type].free_size > chunk_size)
@@ -68,9 +68,9 @@ static void feed_pool(a_type type)
 	if (type == OBJ_IDENTIFIER)
 		units = 15;
 	else if (type == OBJ_CONS)
-		units = 127;
-	else if (type == OBJ_SET)
 		units = 63;
+	else if (type == OBJ_SET)
+		units = 31;
 	else
 		units = 7;
 

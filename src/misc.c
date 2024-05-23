@@ -89,6 +89,7 @@ void princ_object(FILE *fout, const struct object *p)
 		return;
 	}
 }
+
 objectp
 eqset(objectp a, objectp b)
 {
@@ -208,10 +209,69 @@ eqcons(objectp a, objectp b)
 		if (c == nil)
 			return nil;
 		break;
+	case OBJ_SET:
+		c = eqset(a, b);
+		if (c == nil)
+		{
+			return nil;
+		}
+		break;
 	default:
 		return t;
 	}
 	return c->type == OBJ_T ? eqcons(cdr(a), cdr(b)) : nil;
+}
+
+int in_set(objectp x, objectp y)
+{
+	objectp p;
+	if (y == nil || y == NULL)
+		return 0;
+	do
+	{
+		p = car(y);
+		if (x->type != p->type)
+			continue;
+		switch (x->type)
+		{
+		case OBJ_NULL:
+			return 0;
+		case OBJ_NIL:
+		case OBJ_T:
+		case OBJ_TAU:
+			if (x == p)
+				return 1;
+			break;
+		case OBJ_IDENTIFIER:
+			if (!strcmp(x->value.id, p->value.id))
+				return 1;
+			break;
+		case OBJ_STRING:
+			if (!strcmp(x->value.s.str, p->value.s.str))
+				return 1;
+			break;
+		case OBJ_INTEGER:
+			if (x->value.i == p->value.i)
+				return 1;
+			break;
+		case OBJ_RATIONAL:
+			if (x->value.r.d == p->value.r.d &&
+				x->value.r.n == p->value.r.n)
+				return 1;
+			break;
+		case OBJ_CONS:
+			if (eqcons(x, p) == t)
+				return 1;
+			break;
+		case OBJ_SET:
+			if (eqset(x, p) == t)
+				return 1;
+			break;
+		default:
+			break;
+		}
+	} while ((y = cdr(y)) != nil);
+	return 0;
 }
 
 long int
@@ -319,7 +379,7 @@ set_to_array(objectp p)
 
 	n = 1 << i;
 	tmp = (void *)malloc(i * sizeof(objectp));
-	if(tmp == NULL)
+	if (tmp == NULL)
 		return nil;
 	arrayp = (objectp *)tmp;
 	for (j = 0; j < i; j++)

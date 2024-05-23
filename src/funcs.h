@@ -15,6 +15,7 @@ extern objectp F_or(const struct object *);
 extern objectp F_not(const struct object *);
 extern objectp F_xor(const struct object *);
 extern objectp F_imply(const struct object *);
+extern objectp F_iff(const struct object *);
 
 // funcs-set
 extern objectp F_cap(const struct object *);
@@ -29,7 +30,7 @@ extern objectp F_powerset(const struct object *);
 extern objectp F_symdiff(const struct object *);
 extern objectp F_progn(const struct object *);
 
-#define FUNCS_N 70
+#define FUNCS_N 71
 extern const funcs functions[FUNCS_N];
 #define ISNUMERIC(x) ((x)->type == OBJ_INTEGER || (x)->type == OBJ_RATIONAL) \
 						 ? true                                              \

@@ -24,12 +24,15 @@ F_mod(const struct object *args)
 
     _ASSERTP(n->type == OBJ_INTEGER, NOT INTEGER, MOD, n);
     _ASSERTP(d->type == OBJ_INTEGER, NOT INTEGER, MOD, d);
-    _ASSERTP(d->value.i != 0, DIVISION BY ZERO, MOD, d);
+    _ASSERTP(d->value.i >= 1, MODULUS < 1, MOD, d);
 
     r = new_object(OBJ_INTEGER);
     r->value.i = n->value.i % d->value.i;
+    if(r->value.i < 0)
+        r->value.i += d->value.i;
     return r;
 }
+
 objectp
 F_lesseq(const struct object *args)
 {
@@ -245,6 +248,13 @@ F_pow(const struct object *args)
     arg2 = eval(cadr(args));
     _ASSERTP(ISNUMERIC(arg1), NOT NUMERIC, ^, arg1);
     _ASSERTP(arg2->type == OBJ_INTEGER, NOT INTEGER, ^, arg2);
+    if(arg2->value.i < 0) {
+        arg2->value.i = arg2->value.i * -1;        
+        r = new_object(OBJ_RATIONAL);
+        r->value.r.n = 1;
+        r->value.r.d = (long int)pow((double)arg1->value.i, (double)arg2->value.i);
+        return r;
+    }
     if (arg1->type == OBJ_INTEGER)
     {
         r = new_object(OBJ_INTEGER);
@@ -351,4 +361,21 @@ F_imply(const struct object *args)
     if (a == t && b == nil)
         return nil;
     return t;
+}
+
+objectp
+F_iff(const struct object *args)
+{
+    objectp r, p1;
+    r = eval(car(args));
+    _ASSERTP(ISBOOL(r), NOT BOOL EXPRESSION, IFF, r);
+
+    args = cdr(args);
+    do
+    {
+        p1 = eval(car(args));
+        _ASSERTP(ISBOOL(p1), NOT BOOL EXPRESSION, IFF, p1);
+        r = (p1 != r) ? nil : t;
+    } while ((args = cdr(args)) != nil);
+    return r;
 }

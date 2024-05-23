@@ -68,8 +68,12 @@ typedef struct
 {
   char *name;
   objectp (*func)(const struct object *);
-  char doc[64];
 } funcs;
+
+typedef struct {
+  char *name;
+  objectp func;
+} func_cache;
 
 #define vcar value.c.car
 #define vcdr value.c.cdr

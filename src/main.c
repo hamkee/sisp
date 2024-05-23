@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <setjmp.h>
 #include <time.h>
+#include <sys/resource.h>
 
 #include "sisp.h"
 #include "extern.h"
@@ -13,8 +14,17 @@
 
 int main(int argc, char **argv)
 {
+	struct rlimit rl;
+	getrlimit(RLIMIT_STACK, &rl);
+	rl.rlim_cur = rl.rlim_max;
+	setrlimit(RLIMIT_STACK, &rl);
+	getrlimit(RLIMIT_RSS, &rl);
+	rl.rlim_cur = rl.rlim_max;
+	setrlimit(RLIMIT_RSS, &rl);
+	getrlimit(RLIMIT_DATA, &rl);
+	rl.rlim_cur = rl.rlim_max;
+	setrlimit(RLIMIT_DATA, &rl);
 	init_objects();
-
 	input_file = fmemopen(builtin_functions, strlen(builtin_functions), "r");
 	process_file();
 	fclose(input_file);

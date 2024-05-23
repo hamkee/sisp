@@ -7,5 +7,6 @@ extern void princ_object(FILE *, const struct object *);
 extern int unsafe_sanitize(objectp);
 extern unsigned long card(objectp);
 extern objectp set_to_array(objectp);
+int in_set(objectp, objectp);
 #define _MISC_H
 #endif

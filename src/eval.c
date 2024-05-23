@@ -2,13 +2,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-
+#include <time.h>
 #include "sisp.h"
 #include "eval.h"
 #include "funcs.h"
 #include "extern.h"
 #include "misc.h"
-
+bool lazy_eval = false;
 __inline__ static int
 compar(const void *p1, const void *p2)
 {
@@ -32,7 +32,7 @@ eval_rat(const struct object *args)
 
 	n = args->value.r.n;
 	d = args->value.r.d;
-	_ASSERTP(d != 0L, DIVISION BY ZERO, EVAL RAT, null);
+	_ASSERTP(d != 0L, DIVISION BY ZERO, EVAL RAT, args);
 	if (n < 0)
 	{
 		sign = 1;
@@ -64,12 +64,141 @@ eval_rat(const struct object *args)
 	return result;
 }
 
+objectp
+sst_lazy(objectp b, objectp v, objectp body)
+{
+
+	objectp p, first, prev, q;
+	first = prev = NULL;
+
+	do
+	{
+		p = car(body);
+		q = new_object(OBJ_CONS);
+		if (p->type != OBJ_IDENTIFIER && p->type != OBJ_CONS && p->type != OBJ_SET)
+			q->vcar = p;
+		else
+			switch (p->type)
+			{
+			case OBJ_IDENTIFIER:
+				q->vcar = (!strcmp(p->value.id, b->value.id)) ? v : p;
+				break;
+			case OBJ_CONS:
+				q->vcar = sst_lazy(b, v, p);
+				break;
+			case OBJ_SET:
+				q->vcar = sst_lazy(b, v, p);
+				break;
+			default:
+				q->vcar = p;
+				break;
+			}
+		if (first == NULL)
+			first = q;
+		if (prev != NULL)
+			prev->vcdr = q;
+		prev = q;
+	} while ((body = cdr(body)) != nil);
+	return first;
+}
+objectp
+sst_lazy_p(objectp args, objectp body)
+{
+
+	objectp p, first, prev, q, tmp;
+	first = prev = NULL;
+
+	do
+	{
+		p = car(body);
+		q = new_object(OBJ_CONS);
+		tmp = args;
+		if (p->type != OBJ_IDENTIFIER && p->type != OBJ_CONS && p->type != OBJ_SET)
+			q->vcar = p;
+		else
+			switch (p->type)
+			{
+			case OBJ_IDENTIFIER:
+				do
+				{
+					if (!strcmp(p->value.id, tmp->vcar->vcar->value.id))
+					{
+						q->vcar = tmp->vcar->vcdr->vcar;
+						break;
+					}
+					else
+					{
+						q->vcar = p;
+					}
+				} while ((tmp = cdr(tmp)) != nil);
+				break;
+			case OBJ_CONS:
+			case OBJ_SET:
+				q->vcar = sst_lazy_p(args, p);
+				break;
+			default:
+				q->vcar = p;
+				break;
+			}
+		if (first == NULL)
+			first = q;
+		if (prev != NULL)
+			prev->vcdr = q;
+		prev = q;
+	} while ((body = cdr(body)) != nil);
+	return first;
+}
+
+static objectp
+eval_func_lazy(objectp p, objectp args)
+{
+	objectp head_args, b, q, bind_list, body, M;
+	q = head_args = b = NULL;
+	bind_list = cadr(p);
+	body = cddr(p);
+	if (bind_list == nil)
+	{
+		if (!setjmp(je))
+		{
+			q = eval(car(cdr(cdr(p))));
+			return q;
+		}
+	}
+	do
+	{
+		M = new_object(OBJ_CONS);
+		M->vcar = new_object(OBJ_CONS);
+		M->vcar->vcar = car(bind_list);
+		M->vcar->vcdr = new_object(OBJ_CONS);
+		M->vcar->vcdr->vcar = car(args);
+		if (head_args == NULL)
+			head_args = M;
+		if (b != NULL)
+			b->vcdr = M;
+		b = M;
+		args = cdr(args);
+	} while ((bind_list = cdr(bind_list)) != nil);
+	bind_list = cadr(p);
+	args = head_args;
+	body = sst_lazy_p(args, body);
+	if (!setjmp(je))
+	{
+		do
+		{
+			if (cdr(body) == nil)
+				break;
+			eval(car(body));
+		} while ((body = cdr(body)) != nil);
+		q = eval(car(body));
+	}
+	return q;
+}
+
 static objectp
 eval_func(objectp p, objectp args)
 {
 	objectp head_args, b, q, M, bind_list;
 	q = head_args = b = NULL;
-
 	bind_list = cadr(p);
 
 	if (bind_list == nil)
@@ -123,7 +252,6 @@ eval_func(objectp p, objectp args)
 			set_object(car(bind_list), cadr(car(head_args)));
 		head_args = cdr(head_args);
 	} while ((bind_list = cdr(bind_list)) != nil);
-
 	return q;
 }
 
@@ -143,9 +271,6 @@ eval_bquote(objectp args)
 			r->vcar = eval(args);
 			if (first == NULL)
 				first = r;
-			// if (prev != NULL)
-			// 	prev->vcdr = r;
-			// prev = r;
 			return car(first);
 		}
 		else
@@ -160,35 +285,58 @@ eval_bquote(objectp args)
 	return first;
 }
 
+static unsigned int rbp = 0;
 objectp
 eval_cons(const struct object *p)
 {
+
 	objectp func_name, q;
 	funcs key, *item;
 	unsigned long n_args = 0;
 	_ASSERTP(car(p)->type == OBJ_IDENTIFIER, NOT A FUNCTION, EVAL, car(p));
 
-	if (!strcmp(car(p)->value.id, "lambda"))
+	for (unsigned int i = 0; i < rbp; i++)
+	{
+		if(function_cache[i].name == NULL)
+			continue;
+		if (!strcmp(p->vcar->value.id, function_cache[i].name))
+		{
+			return (lazy_eval == true) ? eval_func_lazy(function_cache[i].func, p->vcdr)
+									   : eval_func(function_cache[i].func, p->vcdr);
+		}
+	}
+
+	if (!strcmp(p->vcar->value.id, "lambda"))
 	{
 		q = new_object(OBJ_IDENTIFIER);
 		q->value.id = strdup("lambda");
 		return q;
 	}
-	key.name = car(p)->value.id;
+
+
+	key.name = p->vcar->value.id;
 	if ((item = bsearch(&key, functions,
 						sizeof(functions) / sizeof(functions[0]),
 						sizeof(functions[0]), compar)) != NULL)
 		return item->func(cdr(p));
-	func_name = get_object(car(p));
-	if (card(cdr(p)) != (n_args = card(cadr(func_name))))
+
+	func_name = get_object(p->vcar);
+
+	if (card(p->vcdr) != (n_args = card(cadr(func_name))))
 	{
 		fprintf(stderr, "; %s: EXPECTED %lu ARGUMENTS.", car(p)->value.id, n_args);
 		longjmp(je, 1);
 	}
+	printf("%s not in cache\n",p->vcar->value.id);
+	function_cache[rbp].name = strdup(p->vcar->value.id);
+	function_cache[rbp].func = func_name;
+	rbp++;
+	if (rbp == CACHE_SIZE)
+		rbp = 0;
 
-	return eval_func(func_name, cdr(p));
+	return (lazy_eval == true) ? eval_func_lazy(func_name, p->vcdr)
+							   : eval_func(func_name, p->vcdr);
 }
-
 
 objectp
 eval_set(const struct object *p)
@@ -198,7 +346,6 @@ eval_set(const struct object *p)
 	r = nil;
 	if (p == empty)
 	{
-
 		return empty;
 	}
 	if (COMPSET(p))
@@ -219,6 +366,7 @@ eval_set(const struct object *p)
 		} while ((tmp = cdr(tmp)) != nil);
 		return first;
 	}
+
 	do
 	{
 		p1 = p->value.c.car;

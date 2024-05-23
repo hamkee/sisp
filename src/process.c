@@ -16,6 +16,7 @@ void clean_buffers(void)
 {
 	free(token_buffer);
 	fclose(input_file);
+	fflush(stdout);
 }
 
 void process_file(void)
@@ -33,11 +34,10 @@ void process_file(void)
 		}
 		else
 			break;
-		garbage_collect();
+	 garbage_collect();
 	}
 	clean_buffers();
 }
-
 static void
 process_stdin(void)
 {

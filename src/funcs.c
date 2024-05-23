@@ -228,7 +228,15 @@ F_typeof(const struct object *args)
 objectp
 F_if(const struct object *args)
 {
-	return eval(car(args)) != nil ? eval(cadr(args)) : F_progn(cddr(args));
+	if (eval(car(args)) != nil)
+		return eval(cadr(args));
+	do
+	{
+		if (cdr(args) == nil)
+			break;
+		eval(car(args));
+	} while ((args = cdr(args)) != nil);
+	return eval(car(args));
 }
 
 objectp
@@ -312,19 +320,24 @@ F_cons(const struct object *args)
 objectp
 F_list(const struct object *args)
 {
-	objectp first = NULL, prev = NULL, p1;
+	objectp first, prev, p1;
+	p1 = new_object(OBJ_CONS);
+	p1->vcar = eval(car(args));
+	first = p1;
+	prev = p1;
+	args = cdr(args);
+	if (args == nil)
+		return first;
 	do
 	{
 		p1 = new_object(OBJ_CONS);
 		p1->vcar = eval(car(args));
-		if (first == NULL)
-			first = p1;
-		if (prev != NULL)
-			prev->vcdr = p1;
+		prev->vcdr = p1;
 		prev = p1;
 	} while ((args = cdr(args)) != nil);
 	return first;
 }
+
 objectp
 F_evlis(const struct object *args)
 {
@@ -342,6 +355,7 @@ F_evlis(const struct object *args)
 	} while ((args = cdr(args)) != nil);
 	return first;
 }
+
 objectp
 F_map(const struct object *args)
 {
@@ -777,10 +791,7 @@ F_push(const struct object *args)
 	{
 		r = new_object(OBJ_CONS);
 		r->vcar = car(s);
-		if (first == NULL)
-			first = r;
-		if (prev != NULL)
-			prev->vcdr = r;
+		prev->vcdr = r;
 		prev = r;
 	} while ((s = cdr(s)) != nil);
 	set_object(car(cdr(args)), first);
@@ -798,51 +809,20 @@ F_dump(const struct object *args)
 		dump_object((int)pn->value.i);
 	return null;
 }
+
 objectp
 F_undef(const struct object *args)
 {
 	objectp p;
-	p = car(args);
-	if (p->type != OBJ_IDENTIFIER)
-		return nil;
-	remove_object(p);
+	do
+	{
+		p = car(args);
+
+		if (p->type != OBJ_IDENTIFIER)
+			return nil;
+		remove_object(p);
+	} while ((args = cdr(args)) != nil);
 	return t;
-}
-
-static int
-compar(const void *p1, const void *p2)
-{
-	return strcmp(((funcs *)p1)->name, ((funcs *)p2)->name);
-}
-
-objectp
-F_help(const struct object *args)
-{
-	objectp arg1;
-	funcs key;
-	const funcs *item;
-	int i;
-	if (args == nil)
-	{
-		for (i = 0; i < FUNCS_N; i++)
-		{
-			printf("%s:%s\n", functions[i].name, functions[i].doc);
-		}
-		return t;
-	}
-	arg1 = car(args);
-	if (arg1->type != OBJ_IDENTIFIER)
-		return nil;
-	key.name = arg1->value.id;
-	key.func = NULL;
-	if ((item = bsearch(&key, functions,
-						sizeof(functions) / sizeof(functions[0]),
-						sizeof(functions[0]), compar)) != NULL)
-	{
-		printf("; %s:%s\n", item->name, item->doc);
-		return t;
-	}
-	return nil;
 }
 
 objectp
@@ -863,75 +843,100 @@ F_numberp(const struct object *arg)
 		return t;
 	return nil;
 }
-
+objectp
+F_gc(const struct object *arg)
+{
+	if (arg->type != OBJ_NULL)
+		garbage_collect();
+	return t;
+}
+objectp
+F_lazy(const struct object *arg)
+{
+	objectp p;
+	p = eval(car(arg));
+	if (p == t)
+	{
+		printf("; LAZY EVAL: ENABLED\n");
+		lazy_eval = true;
+	}
+	else
+	{
+		printf("; LAZY EVAL: DISABLED\n");
+		lazy_eval = false;
+	}
+	return t;
+}
 const funcs functions[] = {
-	{"*", F_prod, "(NUM_1 ... NUM_k) -> NUM"},
-	{"+", F_add, "(NUM_1 ... NUM_k) -> NUM"},
-	{"/", F_div, "(NUM_1 ... NUM_k) -> NUM"},
-	{"<", F_less, "(NUM_1 NUM_2) -> [NIL|T]"},
-	{"<=", F_lesseq, "(NUM_1 NUM_2) -> [NIL|T]"},
-	{"=", F_eq, "(NUM_1 NUM_2) -> [NIL|T]"},
-	{"=>", F_imply, "EXPR EXPR -> [NIL|T]"},
-	{">", F_great, "(NUM_1 NUM_2) -> [NIL|T]"},
-	{">=", F_greateq, "(NUM_1 NUM_2) -> [NIL|T]"},
-	{"\\", F_diff, "SET SET -> SET"},
-	{"^", F_pow, "NUMBER INT -> NUMBER"},
-	{"and", F_and, "(BOOL_1 ... BOOL_n) -> [NIL|T]"},
-	{"append", F_union, "(LIST_1 ... LIST_k) -> LIST"},
-	{"assoc", F_assoc, "(IDENTIFIER ((X_1 V_1) ... (X_N V_N))) -> V_I"},
-	{"atomp", F_atom, "X -> [NIL|T]"},
-	{"bquote", F_bquote, "EXPR -> EXPR"},
-	{"cap", F_cap, "LIST_1 LIST_2 -> LIST"},
-	{"car", F_car, "LIST -> VALUE"},
-	{"cat", F_cat, "(STRING_1 STRING_2) -> STRING"},
-	{"cdr", F_cdr, "LIST -> LIST"},
-	{"comma", F_comma, "EXPR -> EXPR"},
-	{"comp", F_complement, "SET -> SET"},
-	{"cond", F_cond, "(((COND_1) (EXPR_1)) ... ((COND_N) EXPR_N)) -> VAL "},
-	{"cons", F_cons, "(X_1 X_2) -> CONS"},
-	{"consp", F_consp, "X -> [NIL|T]"},
-	{"define", F_setq, "(VAR_1 VAL_1 ... VAR_k VAL_k) -> VAL_k"},
-	{"defmacro", F_defmacro, "(<= X_1 X_2)"},
-	{"diff", F_diff, "(CONS CONS) -> CONS"},
-	{"dump", F_dump, "?POOL -> T"},
-	{"eq", F_eq, "(X_1 X_2) -> [NIL|T]"},
-	{"eval", F_eval, "EXPR -> EXPR"},
-	{"evlis", F_evlis, "((LIST_1) ... (LIST_N)) -> ( (EVAL LIST_1) ... (EVAL LIST_N))"},
-	{"help", F_help, "FUNC -> [NIL|T]"},
-	{"if", F_if, "(COND EXPR_T EXPR_NIL) -> EXPR"},
-	{"in", F_member, "X Y -> NIL|T"},
-	{"labels", F_labels, "((FUN_1) ... (FUN_m)) EXPR_1 .. EXPR_k) -> EXPR_k"},
-	{"let", F_let, "((ID_1 VAL_1) ... (ID_m VAL_m)) EXPR_1 .. EXPR_k) -> EXPR_k"},
-	{"list", F_list, "(X_1 X_2 .. X_k) -> LIST"},
-	{"load", F_loadfile, "IDENTIFIER"},
-	{"map", F_map, "(FUNCTION LIST) -> LIST"},
-	{"memberp", F_member, "(X_1 LIST) -> [NIL|T]"},
-	{"mod", F_mod, "INT_1 INT_2 -> INT"},
-	{"not", F_not, "BOOL -> BOOL"},
-	{"notin", F_notin, "SET -> [NIL|T]"},
-	{"nth", F_nth, "CONS -> X"},
-	{"numberp", F_numberp, "X -> [NIL|T]"},
-	{"or", F_or, "(BOOL_1 ... BOOL_n) -> [NIL|T]"},
-	{"ord", F_ord, "LIST -> NUM"},
-	{"par", F_pair, "(LIST_1 LIST_2) -> LIST"},
-	{"pop", F_pop, "STACK -> X"},
-	{"pow", F_powerset, "SET->SET"},
-	{"print", F_print, "OBJECT -> NULL"},
-	{"prod", F_setprod, "SET SET -> SET"},
-	{"prog1", F_prog1, "EXPR_1 ... EXPR_N -> EVAL(EXPR_1)"},
-	{"prog2", F_prog2, "EXPR_1 ... EXPR_N -> EVAL(EXPR_2)"},
-	{"progn", F_progn, "EXPR_1 ... EXPR_N -> EVAL(EXPR_N)"},
-	{"push", F_push, "(X STACK) -> STACK"},
-	{"quit", F_quit, ""},
-	{"quote", F_quote, "X -> IDENTIFIER"},
-	{"seq", F_seq, "INT_1 INT_2 -> LIST"},
-	{"strlen", F_strlen, "STRING -> NUM"},
-	{"subset", F_subset, "(SET SET) -> [NIL|T]"},
-	{"subst", F_subst, "(X Y (X_1 ... X_N)) -> LIST"},
-	{"substr", F_substr, "(NUM_1 NUM_2 STRING) -> STRING"},
-	{"symdiff", F_symdiff, "SET SET -> SET"},
-	{"typeof", F_typeof, "X -> T"},
-	{"undef", F_undef, "VAR -> [NIL|T]"},
-	{"union", F_union, "SET SET -> SET"},
-	{"xor", F_xor, "(BOOL_1 ... BOOL_n) -> [NIL|T]"},
+	{"*", F_prod},
+	{"+", F_add},
+	{"/", F_div},
+	{"<", F_less},
+	{"<=", F_lesseq},
+	{"<=>", F_iff},
+	{"=", F_eq},
+	{"=>", F_imply},
+	{">", F_great},
+	{">=", F_greateq},
+	{"\\", F_diff},
+	{"^", F_pow},
+	{"and", F_and},
+	{"append", F_union},
+	{"assoc", F_assoc},
+	{"atomp", F_atom},
+	{"bquote", F_bquote},
+	{"cap", F_cap},
+	{"car", F_car},
+	{"cat", F_cat},
+	{"cdr", F_cdr},
+	{"comma", F_comma},
+	{"comp", F_complement},
+	{"cond", F_cond},
+	{"cons", F_cons},
+	{"consp", F_consp},
+	{"define", F_setq},
+	{"defmacro", F_defmacro},
+	{"diff", F_diff},
+	{"dump", F_dump},
+	{"eq", F_eq},
+	{"eval", F_eval},
+	{"evlis", F_evlis},
+	{"gc", F_gc},
+	{"if", F_if},
+	{"in", F_member},
+	{"labels", F_labels},
+	{"lazy", F_lazy},
+	{"let", F_let},
+	{"list", F_list},
+	{"load", F_loadfile},
+	{"map", F_map},
+	{"memberp", F_member},
+	{"mod", F_mod},
+	{"not", F_not},
+	{"notin", F_notin},
+	{"nth", F_nth},
+	{"numberp", F_numberp},
+	{"or", F_or},
+	{"ord", F_ord},
+	{"par", F_pair},
+	{"pop", F_pop},
+	{"pow", F_powerset},
+	{"print", F_print},
+	{"prod", F_setprod},
+	{"prog1", F_prog1},
+	{"prog2", F_prog2},
+	{"progn", F_progn},
+	{"push", F_push},
+	{"quit", F_quit},
+	{"quote", F_quote},
+	{"seq", F_seq},
+	{"strlen", F_strlen},
+	{"subset", F_subset},
+	{"subst", F_subst},
+	{"substr", F_substr},
+	{"symdiff", F_symdiff},
+	{"typeof", F_typeof},
+	{"undef", F_undef},
+	{"union", F_union},
+	{"xor", F_xor},
 };
