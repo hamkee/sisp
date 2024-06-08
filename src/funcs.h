@@ -30,7 +30,7 @@ extern objectp F_powerset(const struct object *);
 extern objectp F_symdiff(const struct object *);
 extern objectp F_progn(const struct object *);
 
-#define FUNCS_N 71
+#define FUNCS_N 72
 extern const funcs functions[FUNCS_N];
 #define ISNUMERIC(x) ((x)->type == OBJ_INTEGER || (x)->type == OBJ_RATIONAL) \
 						 ? true                                              \

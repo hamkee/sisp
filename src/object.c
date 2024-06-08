@@ -182,6 +182,16 @@ void remove_object(objectp name)
 			break;
 		}
 	}
+	for (int i = 0; i < CACHE_SIZE; i++)
+	{
+		if (function_cache[i].name != NULL &&
+			!strcmp(name->value.id, function_cache[i].name))
+		{
+			free(function_cache[i].name);
+			function_cache[i].name = NULL;
+			function_cache[i].func = NULL;
+		}
+	}
 }
 
 void set_object(objectp name, objectp value)
@@ -291,8 +301,10 @@ void dump_object(int pool_number)
 	if (pool_number == 0)
 	{
 		printf("FUNCTION CACHE:\n");
-		for(unsigned int j = 0; j <CACHE_SIZE; j++) {
-			if(function_cache[j].name != NULL) {
+		for (unsigned int j = 0; j < CACHE_SIZE; j++)
+		{
+			if (function_cache[j].name != NULL)
+			{
 				printf("%s: ", function_cache[j].name);
 				princ_object(stdout, function_cache[j].func);
 				printf("\n");

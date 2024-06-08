@@ -12,7 +12,7 @@ INSTALL_DATA = ${INSTALL} -m 644
 INSTALL = /usr/bin/install -c
 
 CC = cc
-CFLAGS = -g -Wall -pedantic -Wextra
+CFLAGS = -Wall -pedantic -Wextra
 LDFLAGS = -lpthread -lm
 LIBS =   
 

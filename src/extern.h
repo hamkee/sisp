@@ -21,7 +21,7 @@ extern objectp search_object_identifier(const char *);
 extern objectp search_object_integer(const long int);
 extern objectp search_object_string(const char *);
 extern objectp search_object_rational(const long int, const long int);
-
+extern int frame;
 extern void set_object(objectp, objectp);
 
 extern objectp get_object(const struct object *);

@@ -535,6 +535,7 @@ F_eq(const struct object *args)
 	return null;
 }
 
+
 objectp
 F_defun(const struct object *args)
 {
@@ -543,6 +544,7 @@ F_defun(const struct object *args)
 	body->vcar = new_object(OBJ_IDENTIFIER);
 	body->vcar->value.id = strdup("lambda");
 	body->vcdr = new_object(OBJ_CONS);
+
 	if (cdr(car(args)) == nil)
 	{
 		body->vcdr->vcar = nil;
@@ -867,6 +869,59 @@ F_lazy(const struct object *arg)
 	}
 	return t;
 }
+objectp
+F_while(const struct object *args)
+{
+	objectp cond, body, tmp, bind, M, b, head_args, tmp2;
+	head_args = b = NULL;
+	cond = car(args);
+	body = car(cdr(args));
+	bind = car(cdr(cdr(args)));
+	tmp2 = bind;
+	//	princ_object(stdout, bind);
+	do
+	{
+		M = new_object(OBJ_CONS);
+		M->vcar = new_object(OBJ_CONS);
+		M->vcar->vcar = car(car(bind));
+		M->vcar->vcdr = new_object(OBJ_CONS);
+		M->vcar->vcdr->vcar = try_object(car(car(bind)));
+		if (head_args == NULL)
+			head_args = M;
+		if (b != NULL)
+			b->vcdr = M;
+		b = M;
+		args = cdr(args);
+	} while ((bind = cdr(bind)) != nil);
+	//	head_args restore
+	tmp = body;
+	while (eval(cond) == t)
+	{
+		body = tmp;
+		bind = tmp2;
+		do
+		{
+			eval(car(body));
+		} while ((body = cdr(body)) != nil);
+		do
+		{
+			set_object(car(car(bind)), eval(car(cdr(car(bind)))));
+		} while ((bind = cdr(bind)) != nil);
+	}
+	do
+	{
+		if (car(cdr(car(head_args))) != NULL)
+		{
+			set_object(car(car(head_args)), car(cdr(car(head_args))));
+		}
+		else
+		{
+			remove_object(car(car(head_args)));
+		}
+	} while ((head_args = cdr(head_args)) != nil);
+
+	return t;
+}
 const funcs functions[] = {
 	{"*", F_prod},
 	{"+", F_add},
@@ -938,5 +993,6 @@ const funcs functions[] = {
 	{"typeof", F_typeof},
 	{"undef", F_undef},
 	{"union", F_union},
+	{"while", F_while},
 	{"xor", F_xor},
 };

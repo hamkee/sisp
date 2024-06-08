@@ -11,7 +11,7 @@
 #include "misc.h"
 
 jmp_buf jb, je;
-
+int frame = 0;
 void clean_buffers(void)
 {
 	free(token_buffer);
@@ -30,11 +30,13 @@ void process_file(void)
 		if (p != NULL)
 		{
 			if (!setjmp(je))
+			{
 				eval(p);
+			}
 		}
 		else
 			break;
-	 garbage_collect();
+		garbage_collect();
 	}
 	clean_buffers();
 }
@@ -52,7 +54,11 @@ process_stdin(void)
 		done_lex();
 		if (p != NULL)
 		{
-			q = (!setjmp(je)) ? eval(p) : NULL;
+			if (!setjmp(je))  {
+				q = eval(p);
+			} else {
+				q = NULL;
+			}
 		}
 		else
 			fprintf(stderr, "; PARSER ERROR.");
