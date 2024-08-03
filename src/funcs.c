@@ -46,7 +46,7 @@ F_cat(const struct object *args)
 	_ASSERTP(arg2->type == OBJ_STRING, NOT STRING, CAT, arg2);
 
 	result = new_object(OBJ_STRING);
-	result->value.s.str = (char *)malloc((arg1->value.s.len + arg2->value.s.len + 1) * sizeof(char));
+	result->value.s.str = malloc((arg1->value.s.len + arg2->value.s.len + 1) * sizeof(char));
 	for (i = 0; i < arg1->value.s.len; i++)
 	{
 		result->value.s.str[i] = arg1->value.s.str[i];
@@ -84,7 +84,7 @@ F_substr(const struct object *args)
 		offset = arg3->value.s.len - arg1->value.i;
 	else
 		offset = arg2->value.i;
-	result->value.s.str = (char *)malloc(offset * sizeof(char));
+	result->value.s.str = malloc(offset * sizeof(char));
 	if (result->value.s.str == NULL)
 	{
 		fprintf(stderr, "; SUBSTR: UNABLE TO ALLOCATE MEMORY\n");

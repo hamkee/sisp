@@ -42,7 +42,7 @@ jmp_buf jl;
 
 void init_lex(void)
 {
-	token_buffer = (char *)malloc(BUFFER_SIZE);
+	token_buffer = malloc(BUFFER_SIZE);
 	if (token_buffer == NULL)
 	{
 		fprintf(stderr, "allocating memory\n");

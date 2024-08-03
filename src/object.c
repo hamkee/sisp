@@ -98,9 +98,9 @@ void init_objects(void)
 	null = new_object(OBJ_NULL);
 	nil = new_object(OBJ_NIL);
 	t = new_object(OBJ_T);
-	tau = (objectp)malloc(OBJ_SIZE);
+	tau = malloc(OBJ_SIZE);
 	tau->type = OBJ_TAU;
-	u = (objectp)malloc(OBJ_SIZE);
+	u = malloc(OBJ_SIZE);
 
 	empty = new_object(OBJ_SET);
 	empty->vcar = tau;
@@ -238,7 +238,7 @@ void set_object(objectp name, objectp value)
 			return;
 		}
 	}
-	p = (object_pairp)malloc(sizeof(struct object_pair));
+	p = malloc(sizeof(struct object_pair));
 	if (p == NULL)
 	{
 		fprintf(stderr, "allocating memory\n");

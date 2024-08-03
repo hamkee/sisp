@@ -378,7 +378,7 @@ set_to_array(objectp p)
 	p = tmp;
 
 	n = 1 << i;
-	tmp = (void *)malloc(i * sizeof(objectp));
+	tmp = malloc(i * sizeof(objectp));
 	if (tmp == NULL)
 		return nil;
 	arrayp = (objectp *)tmp;
