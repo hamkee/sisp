@@ -47,6 +47,11 @@ F_cat(const struct object *args)
 
 	result = new_object(OBJ_STRING);
 	result->value.s.str = malloc((arg1->value.s.len + arg2->value.s.len + 1) * sizeof(char));
+	if (result->value.s.str == NULL)
+	{
+		fprintf(stderr, "; SUBSTR: UNABLE TO ALLOCATE MEMORY\n");
+		return nil;
+	}
 	for (i = 0; i < arg1->value.s.len; i++)
 	{
 		result->value.s.str[i] = arg1->value.s.str[i];
@@ -534,7 +539,6 @@ F_eq(const struct object *args)
 	}
 	return null;
 }
-
 
 objectp
 F_defun(const struct object *args)
