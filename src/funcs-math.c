@@ -241,7 +241,12 @@ F_pow(const struct object *args)
     _ASSERTP(arg2->type == OBJ_INTEGER, NOT INTEGER, ^, arg2);
     exp = arg2->value.i;
     if(exp < 0) {
+        _ASSERTP(exp > LONG_MIN, EXPONENT OVERFLOW, ^, arg2);
         exp = -exp;
+        if (arg1->type == OBJ_INTEGER)
+            _ASSERTP(arg1->value.i != 0, DIVISION BY ZERO, ^, arg1);
+        else
+            _ASSERTP(arg1->value.r.n != 0, DIVISION BY ZERO, ^, arg1);
         r = new_object(OBJ_RATIONAL);
         if (arg1->type == OBJ_INTEGER) {
             r->value.r.n = 1;
