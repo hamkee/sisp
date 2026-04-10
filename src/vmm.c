@@ -74,7 +74,7 @@ static void feed_pool(a_type type)
 	else
 		units = 7;
 
-	pool[type].head.f = malloc(OBJ_SIZE);
+	pool[type].head.f = calloc(1, OBJ_SIZE);
 	if (pool[type].head.f == NULL)
 	{
 		fprintf(stderr, "allocating memory\n");
@@ -84,7 +84,7 @@ static void feed_pool(a_type type)
 	new_heap_list = pool[type].head.f;
 	while (units--)
 	{
-		pool[type].head.f->next = malloc(OBJ_SIZE);
+		pool[type].head.f->next = calloc(1, OBJ_SIZE);
 		if (pool[type].head.f->next == NULL)
 		{
 			fprintf(stderr, "allocating memory\n");
@@ -104,7 +104,15 @@ oballoc(a_type obj_type)
 {
 	objectp p;
 	if (obj_type <= 2 || obj_type == 9)
-		return malloc(OBJ_SIZE);
+	{
+		p = malloc(OBJ_SIZE);
+		if (p == NULL)
+		{
+			fprintf(stderr, "; OBALLOC: UNABLE TO ALLOCATE MEMORY\n");
+			longjmp(je, 1);
+		}
+		return p;
+	}
 	if (pool[obj_type].free_size == 0)
 		feed_pool(obj_type);
 	p = pool[obj_type].head.f;

@@ -8,11 +8,46 @@
 #include <ctype.h>
 #include <errno.h>
 
+#include <limits.h>
+
 #include "sisp.h"
 #include "extern.h"
 #include "funcs.h"
 #include "eval.h"
 #include "misc.h"
+
+static int safe_mul_cmp(long int a, long int b, long int c, long int d)
+{
+    /* Compare a*b vs c*d without overflow using double for magnitude check
+       then falling back to exact cross-multiply when safe */
+    double lhs = (double)a * (double)b;
+    double rhs = (double)c * (double)d;
+    if (lhs < rhs - 1.0) return -1;
+    if (lhs > rhs + 1.0) return 1;
+    /* close values: use 128-bit if available, else long long */
+#ifdef __SIZEOF_INT128__
+    __int128 la = (__int128)a * b;
+    __int128 ra = (__int128)c * d;
+    return (la < ra) ? -1 : (la > ra) ? 1 : 0;
+#else
+    long long la = (long long)a * b;
+    long long ra = (long long)c * d;
+    return (la < ra) ? -1 : (la > ra) ? 1 : 0;
+#endif
+}
+
+static int cmp_numeric(objectp arg1, objectp arg2)
+{
+    if (arg1->type == OBJ_INTEGER && arg2->type == OBJ_INTEGER)
+        return (arg1->value.i < arg2->value.i) ? -1
+             : (arg1->value.i > arg2->value.i) ? 1 : 0;
+    if (arg1->type == OBJ_INTEGER && arg2->type == OBJ_RATIONAL)
+        return safe_mul_cmp(arg1->value.i, arg2->value.r.d, arg2->value.r.n, 1L);
+    if (arg1->type == OBJ_RATIONAL && arg2->type == OBJ_INTEGER)
+        return safe_mul_cmp(arg1->value.r.n, 1L, arg1->value.r.d, arg2->value.i);
+    /* both rational */
+    return safe_mul_cmp(arg1->value.r.n, arg2->value.r.d, arg2->value.r.n, arg1->value.r.d);
+}
 
 objectp
 F_mod(const struct object *args)
@@ -41,22 +76,7 @@ F_lesseq(const struct object *args)
     arg2 = eval(cadr(args));
     _ASSERTP(ISNUMERIC(arg1), NOT NUMERIC, <=, arg1);
     _ASSERTP(ISNUMERIC(arg2), NOT NUMERIC, <=, arg2);
-
-    if (arg1->type == OBJ_INTEGER)
-    {
-        if (arg2->type == OBJ_INTEGER)
-            return (arg1->value.i <= arg2->value.i) ? t : nil;
-        if (arg2->type == OBJ_RATIONAL)
-            return (arg1->value.i * arg2->value.r.d <= arg2->value.r.n) ? t : nil;
-    }
-    else if (arg1->type == OBJ_RATIONAL)
-    {
-        if (arg2->type == OBJ_INTEGER)
-            return (arg1->value.r.n <= arg1->value.r.d * arg2->value.i) ? t : nil;
-        if (arg2->type == OBJ_RATIONAL)
-            return (arg1->value.r.n * arg2->value.r.d <= arg2->value.r.n * arg1->value.r.d) ? t : nil;
-    }
-    return null;
+    return (cmp_numeric(arg1, arg2) <= 0) ? t : nil;
 }
 
 objectp
@@ -67,22 +87,7 @@ F_great(const struct object *args)
     arg2 = eval(cadr(args));
     _ASSERTP(ISNUMERIC(arg1), NOT NUMERIC, >, arg1);
     _ASSERTP(ISNUMERIC(arg2), NOT NUMERIC, >, arg2);
-
-    if (arg1->type == OBJ_INTEGER)
-    {
-        if (arg2->type == OBJ_INTEGER)
-            return (arg1->value.i > arg2->value.i) ? t : nil;
-        if (arg2->type == OBJ_RATIONAL)
-            return (arg1->value.i * arg2->value.r.d > arg2->value.r.n) ? t : nil;
-    }
-    else if (arg1->type == OBJ_RATIONAL)
-    {
-        if (arg2->type == OBJ_INTEGER)
-            return (arg1->value.r.n > arg1->value.r.d * arg2->value.i) ? t : nil;
-        if (arg2->type == OBJ_RATIONAL)
-            return (arg1->value.r.n * arg2->value.r.d > arg2->value.r.n * arg1->value.r.d) ? t : nil;
-    }
-    return null;
+    return (cmp_numeric(arg1, arg2) > 0) ? t : nil;
 }
 
 objectp
@@ -93,22 +98,7 @@ F_greateq(const struct object *args)
     arg2 = eval(cadr(args));
     _ASSERTP(ISNUMERIC(arg1), NOT NUMERIC, >=, arg1);
     _ASSERTP(ISNUMERIC(arg2), NOT NUMERIC, >=, arg2);
-
-    if (arg1->type == OBJ_INTEGER)
-    {
-        if (arg2->type == OBJ_INTEGER)
-            return (arg1->value.i >= arg2->value.i) ? t : nil;
-        if (arg2->type == OBJ_RATIONAL)
-            return (arg1->value.i * arg2->value.r.d >= arg2->value.r.n) ? t : nil;
-    }
-    else if (arg1->type == OBJ_RATIONAL)
-    {
-        if (arg2->type == OBJ_INTEGER)
-            return (arg1->value.r.n >= arg1->value.r.d * arg2->value.i) ? t : nil;
-        if (arg2->type == OBJ_RATIONAL)
-            return (arg1->value.r.n * arg2->value.r.d >= arg2->value.r.n * arg1->value.r.d) ? t : nil;
-    }
-    return null;
+    return (cmp_numeric(arg1, arg2) >= 0) ? t : nil;
 }
 
 objectp
@@ -244,27 +234,34 @@ objectp
 F_pow(const struct object *args)
 {
     objectp arg1, arg2, r;
+    long int exp;
     arg1 = eval(car(args));
     arg2 = eval(cadr(args));
     _ASSERTP(ISNUMERIC(arg1), NOT NUMERIC, ^, arg1);
     _ASSERTP(arg2->type == OBJ_INTEGER, NOT INTEGER, ^, arg2);
-    if(arg2->value.i < 0) {
-        arg2->value.i = arg2->value.i * -1;        
+    exp = arg2->value.i;
+    if(exp < 0) {
+        exp = -exp;
         r = new_object(OBJ_RATIONAL);
-        r->value.r.n = 1;
-        r->value.r.d = (long int)pow((double)arg1->value.i, (double)arg2->value.i);
+        if (arg1->type == OBJ_INTEGER) {
+            r->value.r.n = 1;
+            r->value.r.d = (long int)pow((double)arg1->value.i, (double)exp);
+        } else {
+            r->value.r.n = (long int)pow((double)arg1->value.r.d, (double)exp);
+            r->value.r.d = (long int)pow((double)arg1->value.r.n, (double)exp);
+        }
         return r;
     }
     if (arg1->type == OBJ_INTEGER)
     {
         r = new_object(OBJ_INTEGER);
-        r->value.i = (long int)pow((double)arg1->value.i, (double)arg2->value.i);
+        r->value.i = (long int)pow((double)arg1->value.i, (double)exp);
     }
     else
     {
         r = new_object(OBJ_RATIONAL);
-        r->value.r.n = (long int)pow((double)arg1->value.r.n, (double)arg2->value.i);
-        r->value.r.d = (long int)pow((double)arg1->value.r.d, (double)arg2->value.i);
+        r->value.r.n = (long int)pow((double)arg1->value.r.n, (double)exp);
+        r->value.r.d = (long int)pow((double)arg1->value.r.d, (double)exp);
     }
     return r;
 }
@@ -277,22 +274,7 @@ F_less(const struct object *args)
     arg2 = eval(cadr(args));
     _ASSERTP(ISNUMERIC(arg1), NOT NUMERIC, <, arg1);
     _ASSERTP(ISNUMERIC(arg2), NOT NUMERIC, <, arg2);
-
-    if (arg1->type == OBJ_INTEGER)
-    {
-        if (arg2->type == OBJ_INTEGER)
-            return (arg1->value.i < arg2->value.i) ? t : nil;
-        if (arg2->type == OBJ_RATIONAL)
-            return (arg1->value.i * arg2->value.r.d < arg2->value.r.n) ? t : nil;
-    }
-    else if (arg1->type == OBJ_RATIONAL)
-    {
-        if (arg2->type == OBJ_INTEGER)
-            return (arg1->value.r.n < arg1->value.r.d * arg2->value.i) ? t : nil;
-        if (arg2->type == OBJ_RATIONAL)
-            return (arg1->value.r.n * arg2->value.r.d < arg2->value.r.n * arg1->value.r.d) ? t : nil;
-    }
-    return null;
+    return (cmp_numeric(arg1, arg2) < 0) ? t : nil;
 }
 objectp
 F_and(const struct object *args)

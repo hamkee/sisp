@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <setjmp.h>
+#include <errno.h>
 
 #include "sisp.h"
 #include "extern.h"
@@ -79,7 +80,7 @@ parse_object(int havetoken)
 			thistoken = gettoken();
 		else
 		{
-			while ((havetoken = getchar()) != '\n' && havetoken != EOF)
+			while ((havetoken = fgetc(input_file)) != '\n' && havetoken != EOF)
 				;
 			longjmp(jb, 1);
 		}
@@ -144,8 +145,13 @@ parse_object(int havetoken)
 		}
 		break;
 	case INTEGER:
+		errno = 0;
 		n = strtol(token_buffer, NULL, 10);
-		
+		if (errno == ERANGE)
+		{
+			fprintf(stderr, "; INTEGER OVERFLOW IN TOKEN");
+			longjmp(jb, 1);
+		}
 		if ((p = search_object_integer(n)) == NULL)
 		{
 			p = new_object(OBJ_INTEGER);
@@ -153,9 +159,15 @@ parse_object(int havetoken)
 		}
 		break;
 	case RATIONAL:
+		errno = 0;
 		n = strtol(token_buffer, &delim, 10);
 		delim++;
 		d = strtol(delim, NULL, 10);
+		if (errno == ERANGE)
+		{
+			fprintf(stderr, "; RATIONAL OVERFLOW IN TOKEN");
+			longjmp(jb, 1);
+		}
 		if ((p = search_object_rational(n, d)) == NULL)
 		{
 			p = new_object(OBJ_RATIONAL);
@@ -164,7 +176,7 @@ parse_object(int havetoken)
 		}
 		break;
 	default:
-		while ((havetoken = getchar()) != '\n' && havetoken != EOF)
+		while ((havetoken = fgetc(input_file)) != '\n' && havetoken != EOF)
 			;
 		longjmp(jb, 1);
 	}

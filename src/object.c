@@ -129,10 +129,10 @@ void init_objects(void)
 	}
 	for (i = 3; i <= 4; i++)
 	{
-		pool[i].head.f = malloc(OBJ_SIZE);
+		pool[i].head.f = calloc(1, OBJ_SIZE);
 		if (pool[i].head.f == NULL) {
 			fprintf(stderr, "; ERROR allocating memory\n");
-			longjmp(je, 1);
+			exit(1);
 		}
 		pool[i].head.f->next = NULL;
 		new_heap_list = pool[i].head.f;
@@ -140,20 +140,20 @@ void init_objects(void)
 		pool[i].free_size = (unsigned int)j + 1;
 		while (j--)
 		{
-			pool[i].head.f->next = malloc(OBJ_SIZE);
+			pool[i].head.f->next = calloc(1, OBJ_SIZE);
 			if (pool[i].head.f->next == NULL) {
-				fprintf(stderr, "allocating memory\n");
-			longjmp(je, 1);
+				fprintf(stderr, "; ERROR allocating memory\n");
+				exit(1);
 			}
 			pool[i].head.f = pool[i].head.f->next;
 		}
 		pool[i].head.f->next = NULL;
 		pool[i].head.f = new_heap_list;
 	}
-	pool[OBJ_SET].head.f = malloc(OBJ_SIZE);
+	pool[OBJ_SET].head.f = calloc(1, OBJ_SIZE);
 	if (pool[OBJ_SET].head.f == NULL) {
-		fprintf(stderr, "allocating memory\n");
-			longjmp(je, 1);
+		fprintf(stderr, "; ERROR allocating memory\n");
+		exit(1);
 	}
 	pool[OBJ_SET].head.f->next = NULL;
 	new_heap_list = pool[OBJ_SET].head.f;
@@ -161,10 +161,10 @@ void init_objects(void)
 	pool[OBJ_SET].free_size = (unsigned int)j + 1;
 	while (j--)
 	{
-		pool[OBJ_SET].head.f->next = malloc(OBJ_SIZE);
+		pool[OBJ_SET].head.f->next = calloc(1, OBJ_SIZE);
 		if (pool[OBJ_SET].head.f->next == NULL) {
-			fprintf(stderr, "allocating memory\n");
-			longjmp(je, 1);
+			fprintf(stderr, "; ERROR allocating memory\n");
+			exit(1);
 		}
 		pool[OBJ_SET].head.f = pool[OBJ_SET].head.f->next;
 	}
@@ -384,7 +384,7 @@ static void tag_tree(objectp p)
 	if (p->gc == gc_id)
 		return;
 	p->gc = gc_id;
-	if (p->type == OBJ_CONS)
+	if (p->type == OBJ_CONS || p->type == OBJ_SET)
 	{
 		tag_tree(p->vcar);
 		tag_tree(p->vcdr);

@@ -231,7 +231,7 @@ F_symdiff(const struct object *args)
 					break;
 				case OBJ_CONS:
 				case OBJ_SET:
-					c = (tmp->vcar->type == OBJ_SET) ? eqset(arg2->vcar, tmp->vcar) : eqcons(arg1->vcar, tmp->vcar);
+					c = (tmp->vcar->type == OBJ_SET) ? eqset(arg2->vcar, tmp->vcar) : eqcons(arg2->vcar, tmp->vcar);
 					if (c == t)
 					{
 						found = 1;

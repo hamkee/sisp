@@ -190,13 +190,13 @@ int gettoken(void)
 			{
 				if (p - token_buffer >= (long)string_buffer)
 				{
+					offset = p - token_buffer;
 					string_buffer += BUFFER_SIZE;
 					tmp = realloc(token_buffer, string_buffer);
 					if(tmp == NULL) {
 						CLEAN_BUFFER;
 					}
 					token_buffer = (char *) tmp;
-					offset = p - token_buffer;
 					p = token_buffer + offset;
 				}
 				*p++ = c;

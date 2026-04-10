@@ -89,13 +89,14 @@ F_substr(const struct object *args)
 		offset = arg3->value.s.len - arg1->value.i;
 	else
 		offset = arg2->value.i;
-	result->value.s.str = malloc(offset * sizeof(char));
+	result->value.s.str = malloc((offset + 1) * sizeof(char));
 	if (result->value.s.str == NULL)
 	{
 		fprintf(stderr, "; SUBSTR: UNABLE TO ALLOCATE MEMORY\n");
 		return nil;
 	}
-	strncpy(result->value.s.str, arg3->value.s.str + arg1->value.i, offset);
+	memcpy(result->value.s.str, arg3->value.s.str + arg1->value.i, offset);
+	result->value.s.str[offset] = '\0';
 	result->value.s.len = offset;
 	return result;
 }
@@ -165,28 +166,25 @@ objectp
 F_loadfile(const struct object *args)
 {
 	objectp p;
-	size_t i;
+	size_t i, len;
 	char *f_name;
 	p = eval(car(args));
 	if (p->type != OBJ_IDENTIFIER)
 		return null;
-	f_name = malloc(strlen(p->value.id) + 4);
+	len = strlen(p->value.id);
+	f_name = malloc(len + 5);
 	if (f_name == NULL)
 	{
 		fprintf(stderr, "; LOADFILE: ALLOCATING MEMORY\n");
 		return nil;
 	}
-	strncpy(f_name, p->value.id, strlen(p->value.id));
-	strcat(f_name, ".LSP");
-	for (i = 0; i < strlen(f_name); i++)
+	snprintf(f_name, len + 5, "%s.lsp", p->value.id);
+	for (i = 0; i < len + 4; i++)
 	{
 		f_name[i] = tolower(f_name[i]);
 	}
 	process_input(f_name);
-	process_input(NULL);
 	free(f_name);
-	// free(p->value.id);
-	// free(p);
 	return nil;
 }
 
@@ -236,6 +234,9 @@ F_if(const struct object *args)
 {
 	if (eval(car(args)) != nil)
 		return eval(cadr(args));
+	args = cddr(args);
+	if (args == nil)
+		return nil;
 	do
 	{
 		if (cdr(args) == nil)
@@ -440,8 +441,12 @@ F_assoc(const struct object *args)
 		val = caar(assoc);
 		if (var->type == val->type)
 		{
-			if (var->type == OBJ_CONS || var->type == OBJ_SET)
-				return car(assoc);
+			if (var->type == OBJ_CONS)
+				if (eqcons(var, val) == t)
+					return car(assoc);
+			if (var->type == OBJ_SET)
+				if (eqset(var, val) == t)
+					return car(assoc);
 			if (var->type == OBJ_IDENTIFIER)
 				if (!strcmp(var->value.id, val->value.id))
 					return car(assoc);
