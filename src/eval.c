@@ -310,11 +310,15 @@ eval_cons(const struct object *p)
 		fprintf(stderr, "; %s: EXPECTED %lu ARGUMENTS.", car(p)->value.id, n_args);
 		longjmp(je, 1);
 	}
+	if (function_cache[rbp].name != NULL)
+		free(function_cache[rbp].name);
 	function_cache[rbp].name = strdup(p->vcar->value.id);
 	function_cache[rbp].func = func_name;
 	rbp++;
 	if (rbp == CACHE_SIZE)
+	{
 		rbp = 0;
+	}
 
 	return (lazy_eval == true) ? eval_func_lazy(func_name, p->vcdr)
 							   : eval_func(func_name, p->vcdr);

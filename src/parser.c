@@ -145,6 +145,7 @@ parse_object(int havetoken)
 		break;
 	case INTEGER:
 		n = strtol(token_buffer, NULL, 10);
+		
 		if ((p = search_object_integer(n)) == NULL)
 		{
 			p = new_object(OBJ_INTEGER);

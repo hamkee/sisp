@@ -130,8 +130,10 @@ void init_objects(void)
 	for (i = 3; i <= 4; i++)
 	{
 		pool[i].head.f = malloc(OBJ_SIZE);
-		if (pool[i].head.f == NULL)
-			fprintf(stderr, "allocating memory\n");
+		if (pool[i].head.f == NULL) {
+			fprintf(stderr, "; ERROR allocating memory\n");
+			longjmp(je, 1);
+		}
 		pool[i].head.f->next = NULL;
 		new_heap_list = pool[i].head.f;
 		j = (i == 3 ? 31 : 255);
@@ -139,16 +141,20 @@ void init_objects(void)
 		while (j--)
 		{
 			pool[i].head.f->next = malloc(OBJ_SIZE);
-			if (pool[i].head.f->next == NULL)
+			if (pool[i].head.f->next == NULL) {
 				fprintf(stderr, "allocating memory\n");
+			longjmp(je, 1);
+			}
 			pool[i].head.f = pool[i].head.f->next;
 		}
 		pool[i].head.f->next = NULL;
 		pool[i].head.f = new_heap_list;
 	}
 	pool[OBJ_SET].head.f = malloc(OBJ_SIZE);
-	if (pool[OBJ_SET].head.f == NULL)
+	if (pool[OBJ_SET].head.f == NULL) {
 		fprintf(stderr, "allocating memory\n");
+			longjmp(je, 1);
+	}
 	pool[OBJ_SET].head.f->next = NULL;
 	new_heap_list = pool[OBJ_SET].head.f;
 	j = 127;
@@ -156,8 +162,10 @@ void init_objects(void)
 	while (j--)
 	{
 		pool[OBJ_SET].head.f->next = malloc(OBJ_SIZE);
-		if (pool[OBJ_SET].head.f->next == NULL)
+		if (pool[OBJ_SET].head.f->next == NULL) {
 			fprintf(stderr, "allocating memory\n");
+			longjmp(je, 1);
+		}
 		pool[OBJ_SET].head.f = pool[OBJ_SET].head.f->next;
 	}
 	pool[OBJ_SET].head.f->next = NULL;

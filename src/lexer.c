@@ -63,7 +63,7 @@ int gettoken(void)
 	char *p;
 	int c;
 	size_t string_buffer, offset;
-
+	void *tmp;
 	while (true)
 	{
 		c = XGETC();
@@ -191,7 +191,11 @@ int gettoken(void)
 				if (p - token_buffer >= (long)string_buffer)
 				{
 					string_buffer += BUFFER_SIZE;
-					token_buffer = (char *)realloc(token_buffer, string_buffer);
+					tmp = realloc(token_buffer, string_buffer);
+					if(tmp == NULL) {
+						CLEAN_BUFFER;
+					}
+					token_buffer = (char *) tmp;
 					offset = p - token_buffer;
 					p = token_buffer + offset;
 				}

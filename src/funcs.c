@@ -49,7 +49,7 @@ F_cat(const struct object *args)
 	result->value.s.str = malloc((arg1->value.s.len + arg2->value.s.len + 1) * sizeof(char));
 	if (result->value.s.str == NULL)
 	{
-		fprintf(stderr, "; SUBSTR: UNABLE TO ALLOCATE MEMORY\n");
+		fprintf(stderr, "; CAT: UNABLE TO ALLOCATE MEMORY\n");
 		return nil;
 	}
 	for (i = 0; i < arg1->value.s.len; i++)
@@ -96,6 +96,7 @@ F_substr(const struct object *args)
 		return nil;
 	}
 	strncpy(result->value.s.str, arg3->value.s.str + arg1->value.i, offset);
+	result->value.s.len = offset;
 	return result;
 }
 
@@ -184,8 +185,8 @@ F_loadfile(const struct object *args)
 	process_input(f_name);
 	process_input(NULL);
 	free(f_name);
-	free(p->value.id);
-	free(p);
+	// free(p->value.id);
+	// free(p);
 	return nil;
 }
 

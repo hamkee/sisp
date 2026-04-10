@@ -375,6 +375,9 @@ set_to_array(objectp p)
 	{
 		i++;
 	} while ((p = cdr(p)) != nil);
+	if(i > 31) {
+		return nil;
+	}
 	p = tmp;
 
 	n = 1 << i;
